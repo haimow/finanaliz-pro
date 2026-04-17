@@ -64,7 +64,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg0);color:var(--t1);min-
 <div class="cont" id="cont"></div>
 </div>
 </div>
-<div class="mo" id="moOv" style="display:none" onclick="closeMo()"><div class="mod" onclick="event.stopPropagation()"><div class="mod-h"><div class="mod-t">Yeni Dönem Ekle</div><button class="mod-x" onclick="closeMo()">×</button></div><div class="mod-b"><div class="igr"><label class="igl">Dönem Adı (ör: 2024 Q3, 2023 Yıllık)</label><input class="inp" id="moInp" placeholder="Dönem adını girin..." onkeydown="if(event.key==='Enter')addPConf()"></div></div><div class="mod-f"><button class="btn" onclick="closeMo()">İptal</button><button class="btn btn-p" onclick="addPConf()">Ekle</button></div></div></div>
+<div class="mo" id="moOv" style="display:none" onclick="closeMo()"><div class="mod" onclick="event.stopPropagation()"><div class="mod-h"><div class="mod-t">Yeni Dönem Ekle</div><button class="mod-x" onclick="closeMo()">×</button></div><div class="mod-b"><div class="igr"><label class="igl">Dönem Adı</label><input class="inp" id="moInp" placeholder="ör: 2024, 2023 3.Dönem, 2024 Q2" onkeydown="if(event.key==='Enter')addPConf()"><div style="margin-top:6px;font-size:10px;color:var(--am)">⚠ Dönem adı karşılaştırma sıralaması için önemlidir. Lütfen yılı mutlaka belirtin.</div></div></div><div class="mod-f"><button class="btn" onclick="closeMo()">İptal</button><button class="btn btn-p" onclick="addPConf()">Ekle</button></div></div></div>
 <script>
 // THP ACCOUNT MAP
 const THP={
@@ -110,7 +110,7 @@ const FIELDS=[
 ];
 
 const RATIOS={
-liquidity:{label:"Likidite",icon:"💧",items:[
+liquidity:{label:"Likidite",icon:"💵",items:[
 {key:"cr",name:"Cari Oran",formula:"Dönen V. / Kısa V. Yük.",ideal:"1.5–2.0",pct:0,calc:d=>d.currentAssets&&d.shortTermLiabilities?d.currentAssets/d.shortTermLiabilities:null},
 {key:"at",name:"Asit-Test",formula:"(Dönen V.–Stoklar)/Kısa V.Yük.",ideal:">1.0",pct:0,calc:d=>d.currentAssets&&d.shortTermLiabilities?(d.currentAssets-(d.inventory||0))/d.shortTermLiabilities:null},
 {key:"cashr",name:"Nakit Oran",formula:"Nakit/Kısa V.Yük.",ideal:">0.20",pct:0,calc:d=>d.cashEquivalents&&d.shortTermLiabilities?d.cashEquivalents/d.shortTermLiabilities:null},
@@ -361,9 +361,19 @@ aS(RATIOS.liquidity.items[0].calc(d),1.5,1);aS(RATIOS.profitability.items[2].cal
 if(sc.length){const avg=sc.reduce((a,b)=>a+b,0)/sc.length;const pct=Math.round((avg/3)*100);const c=pct>=70?'var(--gn)':pct>=45?'var(--am)':'var(--rd)';h+=`<div style="margin-top:20px;display:flex;justify-content:center"><div class="score-c"><div class="score-ring" style="border-color:${c};color:${c}">${pct}</div><div class="score-l" style="color:${c}">Finansal Sağlık: ${pct>=70?'Sağlıklı':pct>=45?'Dikkat':'Riskli'}</div></div></div>`}
 h+=`</div></div>`;el.innerHTML=h}
 function rCmp(el){if(S.periods.length<2){el.innerHTML='<div class="card"><div class="card-b" style="text-align:center;color:var(--tm);padding:36px">En az <b>2 dönem</b> gerekli.<br><br><button class="btn btn-p" onclick="openMo()">+ Dönem Ekle</button></div></div>';return}
-const aR=Object.values(RATIOS).flatMap(c=>c.items),pV=S.periods.map(p=>{const d=nd(p);return{name:p.name,v:aR.reduce((a,r)=>{a[r.key]=r.calc(d);return a},{})};});
-let h=`<div class="card"><div class="card-h"><div class="card-t">⚖️ Karşılaştırma</div></div><div class="card-b" style="padding:0;overflow:auto;max-height:66vh"><table class="ctb"><thead><tr><th>Rasyo</th>`;pV.forEach(p=>h+=`<th>${p.name}</th>`);h+=`<th>Δ</th></tr></thead><tbody>`;
-aR.forEach(r=>{const vs=pV.map(p=>p.v[r.key]);if(!vs.some(v=>v!==null))return;const l=vs[vs.length-1],pr=vs[vs.length-2];const ch=(l!=null&&pr!=null&&pr!==0)?((l-pr)/Math.abs(pr))*100:null;h+=`<tr><td>${r.name}</td>`;vs.forEach(v=>h+=`<td>${v!==null?(r.pct?fP(v):r.cur?fC(v):fR(v)):"—"}</td>`);h+=`<td class="${ch>0?'cp':ch<0?'cn':''}">${ch!=null?`${ch>0?'▲':'▼'}${Math.abs(ch).toFixed(1)}%`:"—"}</td></tr>`});
+// Sort periods chronologically by extracting year and quarter/period
+function periodSort(a,b){
+  const yA=parseInt((a.name.match(/(\d{4})/)||[])[1])||0;
+  const yB=parseInt((b.name.match(/(\d{4})/)||[])[1])||0;
+  if(yA!==yB)return yA-yB;
+  const qA=parseInt((a.name.match(/(\d+)\s*\.?\s*(?:dönem|çeyrek|q)/i)||a.name.match(/q\s*(\d)/i)||[])[1])||0;
+  const qB=parseInt((b.name.match(/(\d+)\s*\.?\s*(?:dönem|çeyrek|q)/i)||b.name.match(/q\s*(\d)/i)||[])[1])||0;
+  return qA-qB;
+}
+const sorted=[...S.periods].sort(periodSort);
+const aR=Object.values(RATIOS).flatMap(c=>c.items),pV=sorted.map(p=>{const d=nd(p);return{name:p.name,v:aR.reduce((a,r)=>{a[r.key]=r.calc(d);return a},{})};});
+let h=`<div class="card"><div class="card-h"><div class="card-t">⚖️ Karşılaştırma</div><span style="font-size:10px;color:var(--tm)">${sorted.map(p=>p.name).join(' → ')}</span></div><div class="card-b" style="padding:0;overflow:auto;max-height:66vh"><table class="ctb"><thead><tr><th>Rasyo</th>`;pV.forEach(p=>h+=`<th>${p.name}</th>`);h+=`<th>Δ (${sorted[sorted.length-1].name} vs ${sorted[sorted.length-2].name})</th></tr></thead><tbody>`;
+aR.forEach(r=>{const vs=pV.map(p=>p.v[r.key]);if(!vs.some(v=>v!==null))return;const newer=vs[vs.length-1],older=vs[vs.length-2];const ch=(newer!=null&&older!=null&&older!==0)?((newer-older)/Math.abs(older))*100:null;h+=`<tr><td>${r.name}</td>`;vs.forEach(v=>h+=`<td>${v!==null?(r.pct?fP(v):r.cur?fC(v):fR(v)):"—"}</td>`);h+=`<td class="${ch>0?'cp':ch<0?'cn':''}">${ch!=null?`${ch>0?'▲':'▼'}${Math.abs(ch).toFixed(1)}%`:"—"}</td></tr>`});
 h+=`</tbody></table></div></div>`;el.innerHTML=h}
 function rAI(el){const has=S.periods.some(p=>Object.values(p.data).some(v=>v));let body='';
 if(S.aiLd)body=`<div class="aip-ld"><div class="dp"><span></span><span></span><span></span></div> Finansal veriler analiz ediliyor...</div>`;
@@ -415,8 +425,11 @@ render()}
 else{hideLoading();p.parseLog.push({t:'err',m:'Desteklenmeyen: '+ext});render()}}
 
 async function runAI(){S.aiLd=true;S.aiRes='';rC();
-const pd=S.periods.map(p=>{const d=nd(p);const ratios={};Object.values(RATIOS).forEach(cat=>{cat.items.forEach(r=>{const v=r.calc(d);if(v!==null)ratios[r.name]=parseFloat(v.toFixed(4))})});return{donem:p.name,veriler:d,rasyolar:ratios}});
-try{const resp=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:`Sen 15+ yıl deneyimli kıdemli finansal analistsin. Analiz et:\n${JSON.stringify(pd,null,2)}\n\n📋 GENEL DEĞERLENDİRME\n💧 LİKİDİTE\n📈 KÂRLILIK\n⚖️ BORÇLULUK\n⚙️ ETKİNLİK\n${S.periods.length>1?'📊 DÖNEMSEL KARŞILAŞTIRMA\n':''}⚠️ RİSKLER\n✅ ÖNERİLER\n\nTürkçe, profesyonel, spesifik rakamlarla yaz.`}]})});
+// Build a concise summary instead of full raw data to reduce API processing time
+const pd=S.periods.map(p=>{const d=nd(p);const ratios={};Object.values(RATIOS).forEach(cat=>{cat.items.forEach(r=>{const v=r.calc(d);if(v!==null)ratios[r.name]=parseFloat(v.toFixed(2))})});
+const summary={netSatislar:d.netSales,brutKar:d.grossProfit,faaliyetKari:d.operatingProfit,netKar:d.netProfit,toplamAktif:d.totalAssets,ozsermaye:d.equity,toplamBorc:d.totalLiabilities,stoklar:d.inventory,alacaklar:d.tradeReceivables,nakit:d.cashEquivalents,amortisman:d.depreciation};
+return{donem:p.name,ozet:summary,rasyolar:ratios}});
+try{const resp=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:`Kıdemli finansal analist olarak analiz et. Kısa ve öz yaz.\n\n${JSON.stringify(pd)}\n\n📋 GENEL DEĞERLENDİRME\n💵 LİKİDİTE\n📈 KÂRLILIK\n⚖️ BORÇLULUK\n⚙️ ETKİNLİK\n${S.periods.length>1?'📊 DÖNEMSEL KARŞILAŞTIRMA\n':''}⚠️ RİSKLER\n✅ ÖNERİLER\n\nTürkçe, profesyonel yaz.`}]})});
 const text=await resp.text();
 if(!resp.ok){S.aiRes='⚠️ Sunucu Hatası ('+resp.status+'): API bağlantısı kurulamadı. Lütfen ayarları kontrol edin.';S.aiLd=false;rC();return}
 try{const data=JSON.parse(text);S.aiRes=data.content?.map(b=>b.text||'').join('\n')||'Analiz oluşturulamadı.'}catch(e){S.aiRes='⚠️ API yanıt hatası. Lütfen tekrar deneyin.'}}catch(err){S.aiRes='⚠️ Bağlantı Hatası: '+err.message}
