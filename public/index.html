@@ -325,10 +325,11 @@ S.periods.forEach(p=>{
   const om=d.operatingProfit?((d.operatingProfit/d.netSales)*100):0;
   const nm=d.netProfit?((d.netProfit/d.netSales)*100):0;
   const em=d.operatingProfit!=null&&d.depreciation!=null?((d.operatingProfit+(d.depreciation||0))/d.netSales*100):om;
-  const gmC=gm>=30?'var(--gn)':gm>=15?'var(--am)':'var(--rd)';
-  const omC=om>=15?'var(--gn)':om>=5?'var(--am)':'var(--rd)';
-  const nmC=nm>=10?'var(--gn)':nm>=3?'var(--am)':'var(--rd)';
-  const emC=em>=20?'var(--gn)':em>=10?'var(--am)':'var(--rd)';
+  const mCol=v=>v<0?'var(--rd)':v>=20?'var(--gn)':v>=10?'var(--gn)':v>=5?'var(--am)':'var(--am)';
+  const gmC=gm<0?'var(--rd)':gm>=30?'var(--gn)':'var(--am)';
+  const omC=mCol(om);
+  const nmC=nm<0?'var(--rd)':nm>=10?'var(--gn)':'var(--am)';
+  const emC=mCol(em);
   marginsHtml+=`<div style="padding:8px 0;border-bottom:1px solid rgba(35,46,72,.3)">
     <div style="font-size:11px;font-weight:600;color:var(--t1);margin-bottom:6px">${p.name}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
@@ -429,7 +430,17 @@ async function runAI(){S.aiLd=true;S.aiRes='';rC();
 const pd=S.periods.map(p=>{const d=nd(p);const ratios={};Object.values(RATIOS).forEach(cat=>{cat.items.forEach(r=>{const v=r.calc(d);if(v!==null)ratios[r.name]=parseFloat(v.toFixed(2))})});
 const summary={netSatislar:d.netSales,brutKar:d.grossProfit,faaliyetKari:d.operatingProfit,netKar:d.netProfit,toplamAktif:d.totalAssets,ozsermaye:d.equity,toplamBorc:d.totalLiabilities,stoklar:d.inventory,alacaklar:d.tradeReceivables,nakit:d.cashEquivalents,amortisman:d.depreciation};
 return{donem:p.name,ozet:summary,rasyolar:ratios}});
-try{const resp=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:`Kıdemli finansal analist olarak analiz et. Kısa ve öz yaz.\n\n${JSON.stringify(pd)}\n\n📋 GENEL DEĞERLENDİRME\n💵 LİKİDİTE\n📈 KÂRLILIK\n⚖️ BORÇLULUK\n⚙️ ETKİNLİK\n${S.periods.length>1?'📊 DÖNEMSEL KARŞILAŞTIRMA\n':''}⚠️ RİSKLER\n✅ ÖNERİLER\n\nTürkçe, profesyonel yaz.`}]})});
+try{const resp=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:`Sen kıdemli bir finansal analistsin. Aşağıdaki verilere dayanarak kısa bir YÖNETİCİ ÖZETİ hazırla. Uzun olmasın, net ve aksiyona yönelik olsun.
+
+${JSON.stringify(pd)}
+
+Şu yapıda yaz (her bölüm 2-3 cümle):
+
+📋 GENEL DURUM: Şirketin finansal sağlığını tek paragrafta özetle.
+${S.periods.length>1?'📊 DÖNEMSEL DEĞİŞİM: Önceki döneme göre öne çıkan değişimleri belirt.\n':''}⚠️ DİKKAT EDİLMESİ GEREKENLER: En kritik 2-3 risk faktörünü sırala.
+✅ TAVSİYELER: Yönetime somut, uygulanabilir 3-4 öneri sun.
+
+Türkçe, profesyonel ve özlü yaz. Gereksiz tekrar yapma.`}]})});
 const text=await resp.text();
 if(!resp.ok){S.aiRes='⚠️ Sunucu Hatası ('+resp.status+'): API bağlantısı kurulamadı. Lütfen ayarları kontrol edin.';S.aiLd=false;rC();return}
 try{const data=JSON.parse(text);S.aiRes=data.content?.map(b=>b.text||'').join('\n')||'Analiz oluşturulamadı.'}catch(e){S.aiRes='⚠️ API yanıt hatası. Lütfen tekrar deneyin.'}}catch(err){S.aiRes='⚠️ Bağlantı Hatası: '+err.message}
