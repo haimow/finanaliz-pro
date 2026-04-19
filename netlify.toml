@@ -1,6 +1,9 @@
 [build]
   publish = "public"
 
+[functions]
+  directory = "functions"
+
 [[redirects]]
   from = "/api/claude"
   to = "/.netlify/functions/claude-proxy"
