@@ -741,7 +741,6 @@ function loadSaved(id){
   const item=S.savedList.find(x=>x.id===id);
   if(!item)return;
   const donemAdi=item.donem||item.sirket_adi||'Kayıtlı Analiz';
-  // Mevcut dönemde veri varsa yeni dönem ekle, yoksa mevcut dönemi kullan
   const mevcut=S.periods[S.ap];
   if(Object.values(mevcut.data).some(v=>v&&v!=='0')){
     S.periods.push({name:donemAdi,data:eD(),fileName:null,parseLog:[]});
@@ -750,18 +749,15 @@ function loadSaved(id){
     S.periods[S.ap].name=donemAdi;
   }
   const p=S.periods[S.ap];
-  // rasyo_json içindeki ham veri alanlarını yükle
-  // saveAnaliz'de fieldKey olarak kaydedildi (prefix'siz)
   const fieldKeys=new Set(FIELDS.flatMap(s=>s.fields).map(f=>f.key));
   if(item.rasyo_json){
     const rj=item.rasyo_json;
     Object.keys(rj).forEach(k=>{
-      if(fieldKeys.has(k) && rj[k]!==undefined && rj[k]!==null && rj[k]!==''){
+      if(fieldKeys.has(k)&&rj[k]!==undefined&&rj[k]!==null&&rj[k]!==''){
         p.data[k]=String(rj[k]);
       }
     });
   }
-  // Sektör
   if(item.sektor){
     S.sektor=item.sektor;
     const sel=document.getElementById('sektorSel');
@@ -771,8 +767,10 @@ function loadSaved(id){
   S.aiRes=item.ai_yorum||'';
   p.parseLog=[{t:'ok',m:'📂 Kayıtlı analiz yüklendi: '+donemAdi}];
   if(item.dosya_adi)p.parseLog.push({t:'info',m:'📎 Orijinal dosya: '+item.dosya_adi});
-  p.fileName=item.dosya_adi||null;
-  p.missingFields=getMissing(p);
+  // fileName'i KAYDETME — set edilirse rInp "okunamadı" uyarısı gösteriyor
+  p.fileName=null;
+  // missingFields'ı da temizle — kayıtlı veride eksik alan uyarısı olmamalı
+  p.missingFields=[];
   const hasFilled=Object.values(p.data).some(v=>v&&v!=='0');
   S.tab=hasFilled?'ratios':'input';
   render();
