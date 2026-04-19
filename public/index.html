@@ -1002,6 +1002,86 @@ function rKredi(el){
   el.innerHTML=h;
 }
 
+// ─── LOGO İŞLEME ─────────────────────────────────────────────────────────────
+S.logoDataUrl=null;
+
+function handleLogoUpload(input){
+  const file=input.files[0];
+  if(!file)return;
+  if(file.size>2*1024*1024){alert('Logo dosyası 2MB\'dan küçük olmalıdır.');return}
+  const status=document.getElementById('logoStatus');
+  const preview=document.getElementById('logoPreviewBox');
+  status.textContent='İşleniyor...';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      // Canvas'a çiz ve arka planı sil
+      const canvas=document.createElement('canvas');
+      canvas.width=img.width;canvas.height=img.height;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0);
+      // Arka plan silme — köşe pikselinden renk al, benzer renkleri şeffaf yap
+      if(file.type!=='image/svg+xml'){
+        removeImageBg(ctx,canvas.width,canvas.height);
+      }
+      S.logoDataUrl=canvas.toDataURL('image/png');
+      // Önizleme
+      preview.innerHTML=`<img src="${S.logoDataUrl}" style="max-width:76px;max-height:46px;object-fit:contain">`;
+      status.textContent='✓ Logo yüklendi';
+      document.getElementById('logoClearBtn').style.display='inline-flex';
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImageBg(ctx,w,h){
+  const data=ctx.getImageData(0,0,w,h);
+  const px=data.data;
+  // Köşelerden arka plan rengini öğren
+  const corners=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]];
+  const bgColors=corners.map(([x,y])=>{
+    const i=(y*w+x)*4;return{r:px[i],g:px[i+1],b:px[i+2]};
+  });
+  // En yaygın köşe rengini arka plan say
+  const bg=bgColors[0];
+  const threshold=40; // renk toleransı
+  const colorDist=(a,b)=>Math.sqrt((a.r-b.r)**2+(a.g-b.g)**2+(a.b-b.b)**2);
+  // Flood fill ile arka planı sil (kenarlardan başla)
+  const visited=new Uint8Array(w*h);
+  const queue=[];
+  // Kenar piksellerini başlangıç noktası olarak ekle
+  for(let x=0;x<w;x++){queue.push([x,0]);queue.push([x,h-1])}
+  for(let y=0;y<h;y++){queue.push([0,y]);queue.push([w-1,y])}
+  while(queue.length){
+    const [x,y]=queue.pop();
+    if(x<0||x>=w||y<0||y>=h)continue;
+    const idx=y*w+x;
+    if(visited[idx])continue;
+    visited[idx]=1;
+    const pi=idx*4;
+    const cur={r:px[pi],g:px[pi+1],b:px[pi+2]};
+    if(colorDist(cur,bg)>threshold)continue;
+    // Şeffaf yap
+    px[pi+3]=0;
+    queue.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+  }
+  ctx.putImageData(data,0,0);
+}
+
+function clearLogo(){
+  S.logoDataUrl=null;
+  const preview=document.getElementById('logoPreviewBox');
+  if(preview)preview.innerHTML='Logo Yükle';
+  const status=document.getElementById('logoStatus');
+  if(status)status.textContent='PNG, JPG, SVG — maks. 2MB';
+  const btn=document.getElementById('logoClearBtn');
+  if(btn)btn.style.display='none';
+  const inp=document.getElementById('rpr_logo_inp');
+  if(inp)inp.value='';
+}
+
 // ─── PDF RAPOR (HTML Print) ───────────────────────────────────────────────────
 function rRapor(el){
   const p=S.periods[S.ap];
@@ -1026,6 +1106,20 @@ function rRapor(el){
     <div class="igr"><label class="igl">Dönem</label><input class="inp" id="rpr_donem" value="${p.name||''}" placeholder="2024"></div>
     <div class="igr"><label class="igl">Rapor Tarihi</label><input class="inp" id="rpr_tarih" value="${new Date().toLocaleDateString('tr-TR')}"></div>
   </div></div>
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;color:var(--t2);margin-bottom:10px">Firma Logosu <span style="color:var(--tm);font-size:9px">(isteğe bağlı — PNG önerilir, arka plan otomatik silinir)</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div id="logoPreviewBox" style="width:80px;height:50px;background:var(--bgi);border:1px dashed var(--brd);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tm);overflow:hidden;cursor:pointer" onclick="document.getElementById('rpr_logo_inp').click()">
+        Logo Yükle
+      </div>
+      <div>
+        <input type="file" id="rpr_logo_inp" accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp" style="display:none" onchange="handleLogoUpload(this)">
+        <button class="btn" onclick="document.getElementById('rpr_logo_inp').click()" style="font-size:11px;margin-bottom:6px">📁 Dosya Seç</button>
+        <div id="logoStatus" style="font-size:10px;color:var(--tm)">PNG, JPG, SVG — maks. 2MB</div>
+        <button class="btn" id="logoClearBtn" onclick="clearLogo()" style="font-size:10px;display:none;margin-top:4px;color:var(--rd)">✕ Logoyu Kaldır</button>
+      </div>
+    </div>
+  </div>
   <div style="padding:10px 14px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:7px;font-size:11px;color:var(--t2);margin-bottom:16px;line-height:1.7">
     💡 Önizleme açıldığında tarayıcının yazdır penceresinde <b>Hedef → PDF olarak kaydet</b> seçin. Chrome/Edge önerilir.
   </div>
@@ -1072,6 +1166,7 @@ function raporOnizle(){
   const kScores=kriterler.map(k=>k.v===null?null:k.iyi(k.v)?100:k.orta(k.v)?60:20).filter(x=>x!==null);
   const kSkor=kScores.length?Math.round(kScores.reduce((a,b)=>a+b)/kScores.length):null;
   const sektorLabel=S.sektor?(SEKTOR_LABELS[S.sektor]||S.sektor):'';
+  const logoHtml=S.logoDataUrl?`<img src="${S.logoDataUrl}" style="max-height:50px;max-width:150px;object-fit:contain;display:block">`:'';
 
   // Finansal sağlık skoru
   const sc2=[];
@@ -1087,11 +1182,13 @@ function raporOnizle(){
 
   // ── KAPAK
   body+=`<div class="page cover-page">
-    <div class="cover-header"><span class="brand">FinAnaliz <span class="brand-pro">PRO</span></span><span class="cover-badge">Finansal Analiz Raporu</span></div>
+    <div class="cover-header">
+      <span class="brand">FinAnaliz <span class="brand-pro">PRO</span></span>
+      ${logoHtml?`<div class="cover-logo">${logoHtml}</div>`:'<span class="cover-badge">Finansal Analiz Raporu</span>'}
+    </div>
     <div class="cover-center">
       <div class="cover-eyebrow">FİNANSAL ANALİZ RAPORU</div>
       <div class="cover-company">${sirket||'Şirket'}</div>
-      ${sektorLabel?`<div class="cover-sector">${sektorLabel} Sektörü</div>`:''}
     </div>
     <div class="cover-grid">
       <div class="cover-cell"><div class="cell-label">Dönem</div><div class="cell-val">${donem||'—'}</div></div>
@@ -1172,6 +1269,13 @@ function raporOnizle(){
     body+=`</div></div>`;
   }
 
+  // ── SEKTÖR DİPNOTU (son sayfanın altına eklenir)
+  const dipnot=sektorLabel
+    ?`<div class="footnote">* Bu rapordaki rasyo değerlendirmeleri <b>${sektorLabel}</b> sektörü benchmark değerleri esas alınarak yapılmıştır. Genel sektör ortalamaları referans niteliğindedir; şirkete özgü koşullar farklılık gösterebilir.</div>`
+    :'<div class="footnote">* Bu rapordaki rasyo değerlendirmeleri genel finansal benchmark değerleri esas alınarak yapılmıştır.</div>';
+  // Son page'e ekle
+  body=body.replace(/<\/div>\s*$/, dipnot+'</div>');
+
   const win=window.open('','_blank','width=960,height=750');
   win.document.write(`<!DOCTYPE html><html lang="tr"><head>
 <meta charset="UTF-8">
@@ -1193,6 +1297,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293
 .cover-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:8mm}
 .cover-cell{}.cell-label{font-size:7pt;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}.cell-val{font-size:10pt;font-weight:600;color:#e2e8f0}
 .cover-footer{font-size:7pt;color:#475569;margin-top:5mm;padding-top:4mm;border-top:1px solid rgba(255,255,255,.06)}
+.cover-logo{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:center}
+.footnote{font-size:7pt;color:#94a3b8;margin-top:12mm;padding-top:4mm;border-top:1px solid #e2e8f0;line-height:1.6}
 
 /* SAYFA */
 .ph{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:8px;border-bottom:3px solid #1e40af;margin-bottom:16px}
