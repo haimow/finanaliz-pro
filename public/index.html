@@ -99,15 +99,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg0);color:var(--t1);min-
 
 <div class="app" id="app" style="display:none">
 <div class="sidebar" id="sidebar">
-<div class="sb-brand"><div class="brand-i">F</div><div><div class="brand-n">FinAnaliz Pro</div><div class="brand-s">Finansal Analiz Platformu</div></div></div>
+<div class="sb-brand"><div class="brand-i">F</div><div><div class="brand-n">FinAnaliz Pro</div><div class="brand-s">Finansal Analiz Platformu</div></div><button class="tgl" id="tglBtn" onclick="tglSB()" style="margin-left:auto">◀</button></div>
 <div class="sb-tabs"><button class="sb-tab on" data-st="formulas" onclick="sSTab('formulas')">📐 Formüller</button><button class="sb-tab" data-st="charts" onclick="sSTab('charts')">📊 Grafikler</button><button class="sb-tab" data-st="saved" onclick="sSTab('saved')">💾 Kayıtlı</button></div>
 <div class="sb-scroll" id="sbCont"></div>
 <div class="userbar" id="userBar"><div class="userbar-av" id="userAv">?</div><div class="userbar-nm" id="userNm">Yükleniyor...</div><button class="userbar-out" onclick="doLogout()">Çıkış</button></div>
 </div>
-<button class="tgl" id="tglBtn" onclick="tglSB()">◀</button>
 <div class="main">
 <div class="sector-bar">
-  <button class="tgl" id="tglBtn" onclick="tglSB()">◀</button>
   <span class="sector-lbl">Sektör:</span>
   <select class="sector-sel" id="sektorSel" onchange="S.sektor=this.value;rRatIfActive();updateSectorBadge()">
     <option value="">— Sektör Seçin —</option>
@@ -404,22 +402,20 @@ function rSBSaved(el){
 let sCh=[];
 function rSBC(el){sCh.forEach(c=>c.destroy());sCh=[];const has=S.periods.some(p=>Object.values(p.data).some(v=>v));if(!has){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--tm);font-size:11px">Veri girişi yapın.</div>';return}
 
-// Build margins HTML (not chart)
 let marginsHtml='<div class="cb"><div class="cb-l">Kâr Marjları</div>';
 S.periods.forEach(p=>{
   const d=nd(p);
-  if(!d.netSales){marginsHtml+=`<div style="padding:6px 0;font-size:10px;color:var(--tm)">${p.name}: Veri yok</div>`;return}
+  if(!d.netSales){marginsHtml+=`<div style="padding:6px 0;font-size:10px;color:var(--tm)">${p.name||'—'}: Veri yok</div>`;return}
   const gm=d.grossProfit?((d.grossProfit/d.netSales)*100):0;
   const om=d.operatingProfit?((d.operatingProfit/d.netSales)*100):0;
   const nm=d.netProfit?((d.netProfit/d.netSales)*100):0;
   const em=d.operatingProfit!=null&&d.depreciation!=null?((d.operatingProfit+(d.depreciation||0))/d.netSales*100):om;
-  // Colors: negative=red, 0-threshold=amber, above=green
-  const gmC=gm<0?'var(--rd)':gm>10?'var(--gn)':'var(--am)';   // Brüt: >%10 yeşil
-  const omC=om<0?'var(--rd)':om>5?'var(--gn)':'var(--am)';     // Faal: >%5 yeşil
-  const nmC=nm<0?'var(--rd)':nm>5?'var(--gn)':'var(--am)';     // Net: >%5 yeşil
-  const emC=em<0?'var(--rd)':em>5?'var(--gn)':'var(--am)';     // FAVÖK: >%5 yeşil
+  const gmC=gm<0?'var(--rd)':gm>10?'var(--gn)':'var(--am)';
+  const omC=om<0?'var(--rd)':om>5?'var(--gn)':'var(--am)';
+  const nmC=nm<0?'var(--rd)':nm>5?'var(--gn)':'var(--am)';
+  const emC=em<0?'var(--rd)':em>5?'var(--gn)':'var(--am)';
   marginsHtml+=`<div style="padding:8px 0;border-bottom:1px solid rgba(35,46,72,.3)">
-    <div style="font-size:11px;font-weight:600;color:var(--t1);margin-bottom:6px">${p.name}</div>
+    <div style="font-size:11px;font-weight:600;color:var(--t1);margin-bottom:6px">${p.name||'—'}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
       <div style="display:flex;justify-content:space-between;font-size:10px"><span style="color:var(--t2)">Brüt Marj</span><span style="color:${gmC};font-family:'JetBrains Mono',monospace;font-weight:600">%${gm.toFixed(1)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:10px"><span style="color:var(--t2)">Faal. Marj</span><span style="color:${omC};font-family:'JetBrains Mono',monospace;font-weight:600">%${om.toFixed(1)}</span></div>
@@ -429,12 +425,22 @@ S.periods.forEach(p=>{
 });
 marginsHtml+='</div>';
 
-el.innerHTML=`<div class="cb"><div class="cb-l">Gelir & Kâr</div><canvas id="ch1"></canvas></div>${marginsHtml}<div class="cb"><div class="cb-l">Bilanço Yapısı</div><canvas id="ch3"></canvas></div>`;
+// Bilanço grafiği aktif döneme göre
+const activePeriod=S.periods[S.ap];
+const activeLabel=activePeriod?.name||'Aktif Dönem';
 
-const L=S.periods.map(p=>p.name),gD=k=>S.periods.map(p=>{const d=nd(p);return d[k]||0});
+el.innerHTML=`<div class="cb"><div class="cb-l">Gelir & Kâr (Tüm Dönemler)</div><canvas id="ch1"></canvas></div>${marginsHtml}<div class="cb"><div class="cb-l">Bilanço Yapısı — ${activeLabel}</div><canvas id="ch3"></canvas></div>`;
+
+const L=S.periods.map(p=>p.name||'—');
+const gD=k=>S.periods.map(p=>{const d=nd(p);return d[k]||0});
 const cO={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#546078',font:{size:9}}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fC(ctx.raw)}}},scales:{x:{ticks:{color:'#546078',font:{size:9}},grid:{color:'rgba(35,46,72,.4)'}},y:{ticks:{color:'#546078',font:{size:9},callback:v=>fCS(v)},grid:{color:'rgba(35,46,72,.4)'}}}};
 const c1=document.getElementById('ch1');if(c1)sCh.push(new Chart(c1,{type:'bar',data:{labels:L,datasets:[{label:'Net Sat.',data:gD('netSales'),backgroundColor:'rgba(59,130,246,.7)',borderRadius:3},{label:'Brüt Kâr',data:gD('grossProfit'),backgroundColor:'rgba(16,185,129,.7)',borderRadius:3},{label:'Net Kâr',data:gD('netProfit'),backgroundColor:'rgba(139,92,246,.7)',borderRadius:3}]},options:cO}));
-const c3=document.getElementById('ch3');if(c3){const l=nd(S.periods[S.periods.length-1]);sCh.push(new Chart(c3,{type:'bar',data:{labels:['Dönen V.','Duran V.','Kısa V.Y.','Uzun V.Y.','Özsermaye'],datasets:[{data:[l.currentAssets||0,l.fixedAssets||0,l.shortTermLiabilities||0,l.longTermLiabilities||0,l.equity||0],backgroundColor:['rgba(59,130,246,.8)','rgba(99,160,246,.6)','rgba(239,68,68,.7)','rgba(239,120,120,.5)','rgba(16,185,129,.7)'],borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fC(ctx.raw)}}},scales:{x:{ticks:{color:'#546078',font:{size:9},callback:v=>fCS(v)},grid:{color:'rgba(35,46,72,.4)'}},y:{ticks:{color:'#8494b2',font:{size:9}},grid:{display:false}}}}}))}
+// Bilanço grafiği — aktif dönem
+const c3=document.getElementById('ch3');
+if(c3&&activePeriod){
+  const l=nd(activePeriod);
+  sCh.push(new Chart(c3,{type:'bar',data:{labels:['Dönen V.','Duran V.','Kısa V.Y.','Uzun V.Y.','Özsermaye'],datasets:[{data:[l.currentAssets||0,l.fixedAssets||0,l.shortTermLiabilities||0,l.longTermLiabilities||0,l.equity||0],backgroundColor:['rgba(59,130,246,.8)','rgba(99,160,246,.6)','rgba(239,68,68,.7)','rgba(239,120,120,.5)','rgba(16,185,129,.7)'],borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fC(ctx.raw)}}},scales:{x:{ticks:{color:'#546078',font:{size:9},callback:v=>fCS(v)},grid:{color:'rgba(35,46,72,.4)'}},y:{ticks:{color:'#8494b2',font:{size:9}},grid:{display:false}}}}}))
+}
 }
 function rC(){document.querySelectorAll('.mtab').forEach(t=>t.classList.toggle('on',t.dataset.mt===S.tab));const el=document.getElementById('cont');if(S.tab==='input')rInp(el);else if(S.tab==='ratios')rRat(el);else if(S.tab==='compare')rCmp(el);else rAI(el)}
 function rInp(el){const p=S.periods[S.ap];const logH=p.parseLog.length?`<div class="plog">${p.parseLog.map(l=>`<div class="${l.t}">${l.t==='ok'?'✓':l.t==='warn'?'⚠':l.t==='err'?'✗':'ℹ'} ${l.m}</div>`).join('')}</div>`:'';
@@ -446,24 +452,24 @@ FIELDS.forEach(s=>{h+=`<div class="st">${s.section}</div><div class="ig">`;s.fie
 h+=`</div></div>`;el.innerHTML=h;
 setTimeout(()=>{const z=document.getElementById('upZ');if(!z)return;z.ondragover=e=>{e.preventDefault();z.classList.add('dov')};z.ondragleave=()=>z.classList.remove('dov');z.ondrop=e=>{e.preventDefault();z.classList.remove('dov');if(e.dataTransfer.files[0])hFile(e.dataTransfer.files[0])}},50)}
 function rCmp(el){if(S.periods.length<2){el.innerHTML='<div class="card"><div class="card-b" style="text-align:center;color:var(--tm);padding:36px">En az <b>2 dönem</b> gerekli.<br><br><button class="btn btn-p" onclick="openMo(\'add\')">+ Dönem Ekle</button></div></div>';return}
-// Init comparison selection if not set
-if(!S.cmpA||!S.cmpB){
+if(S.cmpA==null||S.cmpB==null||S.cmpA===S.cmpB){
   const sorted=[...S.periods].filter(p=>p.name).sort((a,b)=>{const yA=parseInt((a.name.match(/(\d{4})/)||[])[1])||0;const yB=parseInt((b.name.match(/(\d{4})/)||[])[1])||0;return yA-yB});
   S.cmpA=sorted.length>=2?S.periods.indexOf(sorted[sorted.length-2]):0;
   S.cmpB=sorted.length>=2?S.periods.indexOf(sorted[sorted.length-1]):1;
+  if(S.cmpA===S.cmpB)S.cmpB=S.cmpA===0?1:0;
 }
+// Geçersiz index koruması
+if(S.cmpA>=S.periods.length)S.cmpA=0;
+if(S.cmpB>=S.periods.length)S.cmpB=Math.min(1,S.periods.length-1);
 const pA=S.periods[S.cmpA],pB=S.periods[S.cmpB];
 const nameA=pA?.name||'Dönem '+(S.cmpA+1), nameB=pB?.name||'Dönem '+(S.cmpB+1);
-
-// Period selector UI
 let selH=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<select class="inp" style="width:auto;padding:4px 8px;font-size:11px" onchange="S.cmpA=parseInt(this.value);rC()">`;
+<select class="inp" style="width:auto;padding:4px 8px;font-size:11px" onchange="S.cmpA=parseInt(this.value);S.cmpB=S.cmpA===S.cmpB?(S.cmpA===0?1:0):S.cmpB;rC()">`;
 S.periods.forEach((p,i)=>{selH+=`<option value="${i}" ${i===S.cmpA?'selected':''}>${p.name||'Dönem '+(i+1)}</option>`});
 selH+=`</select><span style="color:var(--tm);font-size:11px">ile</span>
-<select class="inp" style="width:auto;padding:4px 8px;font-size:11px" onchange="S.cmpB=parseInt(this.value);rC()">`;
+<select class="inp" style="width:auto;padding:4px 8px;font-size:11px" onchange="S.cmpB=parseInt(this.value);S.cmpA=S.cmpA===S.cmpB?(S.cmpB===0?1:0):S.cmpA;rC()">`;
 S.periods.forEach((p,i)=>{selH+=`<option value="${i}" ${i===S.cmpB?'selected':''}>${p.name||'Dönem '+(i+1)}</option>`});
 selH+=`</select><span style="color:var(--tm);font-size:11px">karşılaştırılıyor</span></div>`;
-
 const aR=Object.values(RATIOS).flatMap(c=>c.items);
 const dA=nd(pA),dB=nd(pB);
 let h=`<div class="card"><div class="card-h"><div class="card-t">⚖️ Karşılaştırma</div>${selH}</div><div class="card-b" style="padding:0;overflow:auto;max-height:66vh"><table class="ctb"><thead><tr><th>Rasyo</th><th>${nameA}</th><th>${nameB}</th><th>Δ (${nameB} vs ${nameA})</th></tr></thead><tbody>`;
@@ -505,7 +511,15 @@ function moConfirm(){
   if(!n)return;
   if(moMode==='add'){S.periods.push({name:n,data:eD(),fileName:null,parseLog:[]});S.ap=S.periods.length-1;closeMo();render()}
   else if(moMode==='rename'){S.periods[S.ap].name=n;closeMo();render()}
-  else if(moMode==='fileUpload'){S.periods[S.ap].name=n;closeMo();if(pendingFile){processFile(pendingFile);pendingFile=null}}
+  else if(moMode==='fileUpload'){
+    S.periods[S.ap].name=n;
+    closeMo();
+    if(pendingFile){
+      S.periods[S.ap].rawFile=pendingFile; // rawFile'ı burada da kaydet
+      processFile(pendingFile);
+      pendingFile=null;
+    }
+  }
 }
 function renamePeriod(i){S.ap=i;openMo('rename',null,S.periods[i].name)}
 
@@ -522,12 +536,12 @@ async function hFile(file){
   if(p.fileName){
     if(!confirm('Bu dönemde zaten veri var. Üzerine yazmak istiyor musunuz?\n\nFarklı bir dönem için yukarıdaki "+ Dönem Ekle" butonunu kullanın.'))return;
   }
-  p.rawFile=file; // kayıt sırasında storage'a yüklemek için sakla
   if(!p.name){
     pendingFile=file;
     openMo('fileUpload');
     return;
   }
+  p.rawFile=file;
   processFile(file);
 }
 
