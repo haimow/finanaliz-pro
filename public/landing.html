@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinAnaliz Pro — Akıllı Finansal Analiz Platformu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;
+  --bg2:#111118;
+  --bg3:#16161f;
+  --brd:rgba(255,255,255,.07);
+  --brd2:rgba(255,255,255,.12);
+  --t1:#f0f0f5;
+  --t2:#8888a0;
+  --t3:#555568;
+  --ac:#4f8ef7;
+  --ac2:#7b5cf0;
+  --gn:#22c897;
+  --am:#f5a623;
+  --rd:#ef4444;
+  --sw:280px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;align-items:center;padding:0 40px;border-bottom:1px solid var(--brd);background:rgba(10,10,15,.85);backdrop-filter:blur(12px);justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;background:var(--ac);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:#fff}
+.logo-text{font-size:15px;font-weight:600;letter-spacing:-.3px}
+.logo-text span{color:var(--t2);font-weight:400}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{color:var(--t2);text-decoration:none;font-size:13px;font-weight:400;transition:color .2s}
+.nav-links a:hover{color:var(--t1)}
+.nav-cta{background:var(--ac);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Sora',sans-serif;transition:opacity .2s;text-decoration:none}
+.nav-cta:hover{opacity:.85}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:100px 24px 60px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.18}
+.hero-orb-1{width:500px;height:500px;background:var(--ac);top:-100px;left:-100px}
+.hero-orb-2{width:400px;height:400px;background:var(--ac2);bottom:-50px;right:-80px}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--brd) 1px,transparent 1px),linear-gradient(90deg,var(--brd) 1px,transparent 1px);background-size:60px 60px;opacity:.4}
+.hero-content{position:relative;z-index:1;max-width:720px}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:5px 14px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--ac);margin-bottom:28px;letter-spacing:.5px}
+.hero-badge::before{content:'';width:6px;height:6px;background:var(--ac);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.hero h1{font-size:clamp(36px,6vw,68px);font-weight:600;line-height:1.08;letter-spacing:-2px;margin-bottom:20px}
+.hero h1 .hl{background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:17px;color:var(--t2);line-height:1.7;max-width:520px;margin:0 auto 36px;font-weight:300}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--ac);color:#fff;border:none;padding:13px 28px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;transition:transform .15s,box-shadow .15s}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(79,142,247,.35)}
+.btn-sec{background:transparent;color:var(--t1);border:1px solid var(--brd2);padding:13px 28px;border-radius:10px;font-size:14px;font-weight:400;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;transition:border-color .2s,background .2s}
+.btn-sec:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.04)}
+.hero-stats{display:flex;gap:32px;justify-content:center;margin-top:52px;flex-wrap:wrap}
+.stat{text-align:center}
+.stat-n{font-size:28px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--t1)}
+.stat-l{font-size:11px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.8px}
+
+/* ── SECTION SHARED ── */
+section{padding:80px 24px}
+.sec-inner{max-width:1100px;margin:0 auto}
+.sec-tag{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--ac);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px}
+.sec-h{font-size:clamp(24px,3.5vw,40px);font-weight:600;letter-spacing:-1px;line-height:1.2;margin-bottom:14px}
+.sec-sub{font-size:15px;color:var(--t2);line-height:1.7;max-width:540px;font-weight:300}
+
+/* ── FEATURES ── */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:48px}
+.feat-card{background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:28px;transition:border-color .2s,transform .2s;position:relative;overflow:hidden}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);opacity:0;transition:opacity .3s}
+.feat-card:hover{border-color:var(--brd2);transform:translateY(-2px)}
+.feat-card:hover::before{opacity:1}
+.feat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px}
+.feat-card h3{font-size:15px;font-weight:500;margin-bottom:8px;letter-spacing:-.2px}
+.feat-card p{font-size:13px;color:var(--t2);line-height:1.6;font-weight:300}
+.feat-new{position:absolute;top:16px;right:16px;background:rgba(79,142,247,.15);color:var(--ac);font-size:9px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:4px;letter-spacing:.5px}
+
+/* ── HOW IT WORKS ── */
+.how{background:var(--bg2)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;margin-top:48px;position:relative}
+.steps::before{content:'';position:absolute;top:28px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--brd2),var(--brd2),transparent);z-index:0}
+.step{text-align:center;padding:0 20px;position:relative;z-index:1}
+.step-num{width:56px;height:56px;background:var(--bg3);border:1px solid var(--brd2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;color:var(--ac)}
+.step h4{font-size:14px;font-weight:500;margin-bottom:8px}
+.step p{font-size:12px;color:var(--t2);line-height:1.6;font-weight:300}
+
+/* ── TAKVİM ── */
+.calendar-preview{background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:24px;margin-top:40px;max-width:700px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.cal-title{font-size:14px;font-weight:500;font-family:'JetBrains Mono',monospace;color:var(--t2)}
+.cal-items{display:flex;flex-direction:column;gap:10px}
+.cal-item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:9px;background:var(--bg3);border:1px solid var(--brd)}
+.cal-item.urgent{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.05)}
+.cal-item.soon{border-color:rgba(245,166,35,.25);background:rgba(245,166,35,.04)}
+.cal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cal-name{font-size:13px;font-weight:400;flex:1}
+.cal-date{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--t3)}
+.cal-badge{font-size:10px;padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+
+/* ── PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:48px}
+.plan{background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:28px;position:relative}
+.plan.featured{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.04)}
+.plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;font-size:10px;padding:4px 14px;border-radius:10px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.plan-name{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.plan-price{font-size:36px;font-weight:600;font-family:'JetBrains Mono',monospace;letter-spacing:-1px}
+.plan-price span{font-size:14px;color:var(--t2);font-weight:400}
+.plan-desc{font-size:12px;color:var(--t2);margin:8px 0 20px;line-height:1.5}
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.plan-features li{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:8px;font-weight:300}
+.plan-features li::before{content:'✓';color:var(--gn);font-size:11px;font-weight:600;flex-shrink:0}
+.plan-features li.off{color:var(--t3)}
+.plan-features li.off::before{content:'—';color:var(--t3)}
+.plan-btn{width:100%;padding:11px;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Sora',sans-serif;border:1px solid var(--brd2);background:transparent;color:var(--t1);transition:background .2s}
+.plan.featured .plan-btn{background:var(--ac);border-color:var(--ac);color:#fff}
+.plan-btn:hover{background:rgba(255,255,255,.06)}
+.plan.featured .plan-btn:hover{opacity:.9}
+
+/* ── CTA ── */
+.cta-section{background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(123,92,240,.08));border-top:1px solid var(--brd);border-bottom:1px solid var(--brd);text-align:center;padding:80px 24px}
+.cta-section h2{font-size:clamp(24px,4vw,44px);font-weight:600;letter-spacing:-1.5px;margin-bottom:16px}
+.cta-section p{font-size:15px;color:var(--t2);margin-bottom:32px;font-weight:300}
+
+/* ── FOOTER ── */
+footer{padding:40px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--brd);flex-wrap:wrap;gap:16px}
+.footer-logo{font-size:13px;color:var(--t3)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:12px;color:var(--t3);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--t2)}
+
+@media(max-width:700px){
+  nav{padding:0 20px}.nav-links{display:none}
+  .hero h1{letter-spacing:-1px}.steps::before{display:none}
+  footer{flex-direction:column;align-items:center;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-mark">F</div>
+    <div class="logo-text">FinAnaliz <span>Pro</span></div>
+  </div>
+  <div class="nav-links">
+    <a href="#ozellikler">Özellikler</a>
+    <a href="#nasil-calisir">Nasıl Çalışır</a>
+    <a href="#takvim">Takvim</a>
+    <a href="#fiyat">Fiyatlar</a>
+  </div>
+  <a href="/app" class="nav-cta">Ücretsiz Dene</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-grid"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">Yapay Zeka Destekli Finansal Analiz</div>
+    <h1>Mizanı Yükle,<br><span class="hl">Anı Anla.</span></h1>
+    <p class="hero-sub">Excel mizanınızı veya PDF finansal tablonuzu yükleyin. Saniyeler içinde detaylı rasyo analizi, anomali tespiti ve AI uzman yorumu alın.</p>
+    <div class="hero-btns">
+      <a href="/app" class="btn-primary">Hemen Başla — Ücretsiz</a>
+      <a href="#ozellikler" class="btn-sec">Özellikleri Keşfet</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-n">20+</div><div class="stat-l">Finansal Rasyo</div></div>
+      <div class="stat"><div class="stat-n">10</div><div class="stat-l">Sektör Benchmark</div></div>
+      <div class="stat"><div class="stat-n">THP</div><div class="stat-l">Bazlı Analiz</div></div>
+      <div class="stat"><div class="stat-n">AI</div><div class="stat-l">Uzman Yorum</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="ozellikler">
+  <div class="sec-inner">
+    <div class="sec-tag">Özellikler</div>
+    <h2 class="sec-h">Muhasebeciler ve Mali Müşavirler için<br>Tasarlandı</h2>
+    <p class="sec-sub">Tek düzen hesap planı bazlı derin analiz. Standart rasyoların ötesinde gerçek içgörüler.</p>
+    <div class="features-grid">
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(79,142,247,.1)">📊</div>
+        <h3>Otomatik PDF/Excel Parse</h3>
+        <p>Beyanname, bilanço veya detay mizan — formatı ne olursa olsun yapay zeka verilerinizi otomatik okur ve analiz eder.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(34,200,151,.1)">🔍</div>
+        <h3>Detay Mizan Analizi</h3>
+        <p>Müşteri/tedarikçi yoğunlaşması, DSO/DPO hesabı, 120 vs 320 piyasa fonlama tespiti, ortaklar cari bankacılık perspektifi.</p>
+        <div class="feat-new">Yeni</div>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(123,92,240,.1)">🤖</div>
+        <h3>AI Uzman Yorumu</h3>
+        <p>Claude Sonnet ile sektör bağlamında kıdemli finansal analist kalitesinde yönetici özeti. Aksiyona yönelik öneriler.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(245,166,35,.1)">🏦</div>
+        <h3>Kredi & BDDK Analizi</h3>
+        <p>Altman Z-Score, 5 BDDK kriteri, kredi skoru hesabı. "Banka neden kredi vermiyor?" sorusuna rakamsal yanıt.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(239,68,68,.1)">⚠️</div>
+        <h3>Anomali Tespiti</h3>
+        <p>8 kategoride otomatik anomali: ters bakiye hataları, şüpheli alacak, KDV birikimi, vergi borcu yoğunlaşması ve daha fazlası.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(79,142,247,.1)">🌊</div>
+        <h3>Sankey Gelir Diyagramı</h3>
+        <p>Net Satış'tan Net Kâr'a kadar para akışını görsel olarak izleyin. Her kalemde tutar ve ciro yüzdesi.</p>
+        <div class="feat-new">Yeni</div>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(34,200,151,.1)">📅</div>
+        <h3>Vergi Takvimi</h3>
+        <p>Geçici Vergi, KDV, Muhtasar, BA-BS, Kurumlar ve Gelir Vergisi beyanları için otomatik e-posta ve ekran hatırlatması.</p>
+        <div class="feat-new">Yakında</div>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(123,92,240,.1)">⚖️</div>
+        <h3>Dönem Karşılaştırması</h3>
+        <p>Birden fazla dönem yükleyin. Rasyo değişimlerini ve hesap kodu bazlı mizan farklarını yan yana görün.</p>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(245,166,35,.1)">📄</div>
+        <h3>Markalı PDF Rapor</h3>
+        <p>Firma logonuzla kişiselleştirilmiş, bölüm seçilebilir PDF raporu. Müşterilerinize sunum kalitesinde analiz.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="nasil-calisir">
+  <div class="sec-inner">
+    <div class="sec-tag">Nasıl Çalışır</div>
+    <h2 class="sec-h">4 Adımda Tam Analiz</h2>
+    <p class="sec-sub">Teknik bilgiye gerek yok. Dosyayı yükleyin, raporu alın.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h4>Dosyayı Yükleyin</h4>
+        <p>Excel mizan, PDF beyanname veya bilanço. Sürükle & bırak yeterli.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h4>AI Okur ve Analiz Eder</h4>
+        <p>THP hesapları otomatik eşlenir, rasyolar hesaplanır, anomaliler tespit edilir.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h4>Uzman Yorum Alın</h4>
+        <p>Sektör ortalamasıyla karşılaştırmalı AI analizi ve aksiyona yönelik öneriler.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h4>Raporu İndirin</h4>
+        <p>Markalı PDF raporunuzu kaydedin veya müşterinizle paylaşın.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TAKVİM PREVİEW -->
+<section id="takvim">
+  <div class="sec-inner">
+    <div class="sec-tag">Vergi Takvimi</div>
+    <h2 class="sec-h">Beyanname Tarihlerini<br>Hiç Kaçırmayın</h2>
+    <p class="sec-sub">Son 3 günde e-posta ve ekran bildirimi. Tüm vergi takvimi tek yerden takip.</p>
+    <div class="calendar-preview">
+      <div class="cal-header">
+        <span class="cal-title">Nisan 2025 — Yaklaşan Beyannameler</span>
+        <span style="font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace">3 hatırlatma</span>
+      </div>
+      <div class="cal-items">
+        <div class="cal-item urgent">
+          <div class="cal-dot" style="background:var(--rd)"></div>
+          <span class="cal-name">KDV Beyannamesi (Mart)</span>
+          <span class="cal-date">24 Nisan</span>
+          <span class="cal-badge" style="background:rgba(239,68,68,.15);color:var(--rd)">2 gün kaldı</span>
+        </div>
+        <div class="cal-item soon">
+          <div class="cal-dot" style="background:var(--am)"></div>
+          <span class="cal-name">Muhtasar Beyanname (Mart)</span>
+          <span class="cal-date">26 Nisan</span>
+          <span class="cal-badge" style="background:rgba(245,166,35,.12);color:var(--am)">4 gün kaldı</span>
+        </div>
+        <div class="cal-item">
+          <div class="cal-dot" style="background:var(--t3)"></div>
+          <span class="cal-name">Geçici Vergi (1. Dönem)</span>
+          <span class="cal-date">17 Mayıs</span>
+          <span class="cal-badge" style="background:rgba(255,255,255,.05);color:var(--t3)">27 gün kaldı</span>
+        </div>
+        <div class="cal-item">
+          <div class="cal-dot" style="background:var(--t3)"></div>
+          <span class="cal-name">BA-BS Formu (Mart)</span>
+          <span class="cal-date">31 Mayıs</span>
+          <span class="cal-badge" style="background:rgba(255,255,255,.05);color:var(--t3)">41 gün kaldı</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="fiyat" style="background:var(--bg2)">
+  <div class="sec-inner">
+    <div class="sec-tag">Fiyatlandırma</div>
+    <h2 class="sec-h">İhtiyacınıza Göre Plan</h2>
+    <p class="sec-sub">Ücretsiz başlayın, büyüdükçe geçiş yapın. Kredi kartı gerekmez.</p>
+    <div class="pricing-grid">
+
+      <div class="plan">
+        <div class="plan-name">Deneme</div>
+        <div class="plan-price">Ücretsiz<span> / ∞</span></div>
+        <div class="plan-desc">Platformu keşfetmek için</div>
+        <ul class="plan-features">
+          <li>3 analiz / ay</li>
+          <li>PDF + Excel parse</li>
+          <li>Rasyo hesaplaması</li>
+          <li>Detay mizan analizi</li>
+          <li class="off">AI uzman yorum</li>
+          <li class="off">Kayıt & bulut depolama</li>
+          <li class="off">Vergi takvimi</li>
+        </ul>
+        <button class="plan-btn">Ücretsiz Başla</button>
+      </div>
+
+      <div class="plan featured">
+        <div class="plan-badge">En Popüler</div>
+        <div class="plan-name">Profesyonel</div>
+        <div class="plan-price">299₺<span> / ay</span></div>
+        <div class="plan-desc">Bireysel Mali Müşavir ve KOBİ'ler için</div>
+        <ul class="plan-features">
+          <li>30 analiz / ay</li>
+          <li>PDF + Excel + Detay Mizan</li>
+          <li>AI uzman yorum</li>
+          <li>Sınırsız kayıt & bulut</li>
+          <li>Vergi takvimi + e-posta bildirim</li>
+          <li>Karşılaştırma & Sankey</li>
+          <li>Markalı PDF rapor</li>
+        </ul>
+        <button class="plan-btn">14 Gün Ücretsiz Dene</button>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Büro / Muhasebe Ofisi</div>
+        <div class="plan-price">799₺<span> / ay</span></div>
+        <div class="plan-desc">Çok müşterili ofisler için</div>
+        <ul class="plan-features">
+          <li>Sınırsız analiz</li>
+          <li>5 kullanıcı hesabı</li>
+          <li>Çoklu şirket portföyü</li>
+          <li>Tüm Profesyonel özellikler</li>
+          <li>Öncelikli destek</li>
+          <li>Özel sektör benchmark'ları</li>
+        </ul>
+        <button class="plan-btn">İletişime Geç</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Hemen Deneyin,<br>Farkı Görün</h2>
+  <p>Kredi kartı gerekmez. 3 analiz ücretsiz, kurulum yok.</p>
+  <a href="/app" class="btn-primary" style="font-size:15px;padding:14px 32px">Ücretsiz Başla</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">© 2025 FinAnaliz Pro. Tüm hakları saklıdır.</div>
+  <div class="footer-links">
+    <a href="#">Gizlilik</a>
+    <a href="#">Kullanım Koşulları</a>
+    <a href="#">İletişim</a>
+  </div>
+</footer>
+
+</body>
+</html>
