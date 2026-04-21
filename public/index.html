@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg0:#080c14;--bg1:#0f1623;--bg2:#161e30;--bg2h:#1c2740;--bgi:#0b1020;--brd:#232e48;--brdf:#3b82f6;--t1:#e2e8f4;--t2:#8494b2;--tm:#546078;--ac:#3b82f6;--acd:rgba(59,130,246,.12);--gn:#10b981;--gnd:rgba(16,185,129,.1);--rd:#ef4444;--am:#f59e0b;--pu:#8b5cf6;--sw:360px;--hh:54px}
@@ -870,6 +871,43 @@ async function loadSavedList(){
   if(!S.user)return;
   const res=await sbCall('list');
   if(Array.isArray(res)){S.savedList=res;if(S.stab==='saved')rSB()}
+}
+
+async function saveEDefterAnaliz(){
+  if(!S.user){alert('Lütfen giriş yapın.');return}
+  if(!S.ed.fisler||!S.ed.fisler.length){alert('Kaydedilecek e-Defter verisi yok.');return}
+  const sirketAdi=prompt('Şirket adı (isteğe bağlı):',S.ed.sirket?.ad||'');
+  if(sirketAdi===null)return;
+  const rasyoJson={
+    __tip:'edefter',
+    __fisler:S.ed.ozet.toplamFis,
+    __satirlar:S.ed.ozet.toplamSatir,
+    __borc:S.ed.ozet.toplamBorç,
+    __alacak:S.ed.ozet.toplamAlacak,
+    __anomali:S.ed.ozet.anomaliSayisi,
+    __donemBas:S.ed.ozet.donemBas,
+    __donemBit:S.ed.ozet.donemBit,
+    __anomaliler:JSON.stringify(S.ed.anomaliler||[]),
+    __hesapOzet:JSON.stringify((S.ed.hesapOzet||[]).slice(0,50))
+  };
+  const donem=`e-Defter ${S.ed.ozet.donemBas||''}`;
+  const res=await sbCall('save',{sirketAdi,sektor:S.sektor||'',donem,rasyoJson,aiYorum:S.ed.aiYorum||'',dosyaAdi:S.ed.dosyaAdi||''});
+  if(!res.ok){alert('Kayıt hatası: '+(res.error||''));return}
+  const analizId=res.id;
+  // XML dosyasını da yükle
+  if(S.ed.rawFile&&analizId){
+    try{
+      const safeName=(S.ed.dosyaAdi||'edefter.xml').replace(/[^a-zA-Z0-9._-]/g,'_').substring(0,100);
+      const buf=await S.ed.rawFile.arrayBuffer();
+      const bytes=new Uint8Array(buf);
+      let bin='';const chunk=8192;
+      for(let i=0;i<bytes.length;i+=chunk){bin+=String.fromCharCode(...bytes.subarray(i,i+chunk));}
+      const b64=btoa(bin);
+      await sbCall('uploadFile',{analizId,dosyaAdi:safeName,base64Data:b64,mimeType:'application/xml'});
+    }catch(e){console.warn('XML yüklenemedi:',e)}
+  }
+  alert('e-Defter analizi kaydedildi.');
+  await loadSavedList();
 }
 
 async function saveAnaliz(){
@@ -2495,7 +2533,10 @@ function rEDefter(el){
   // ── Dosya yükleme alanı ──
   h+=`<div class="card"><div class="card-h">
     <div class="card-t">📋 e-Defter Analizi</div>
-    ${ed.dosyaAdi?`<span style="font-size:10px;color:var(--gn);font-family:'JetBrains Mono',monospace">✓ ${ed.dosyaAdi}</span>`:''}
+    <div style="display:flex;gap:8px;align-items:center">
+      ${ed.dosyaAdi?`<span style="font-size:10px;color:var(--gn);font-family:'JetBrains Mono',monospace">✓ ${ed.dosyaAdi}</span>`:''}
+      ${ed.fisler&&ed.fisler.length&&S.user?`<button class="btn" onclick="saveEDefterAnaliz()" style="font-size:11px;padding:5px 12px">💾 Kaydet</button>`:''}
+    </div>
   </div><div class="card-b">
     <div class="uz" id="edUpZ" onclick="document.getElementById('edInp').click()" style="border-color:${ed.dosyaAdi?'var(--gn)':'var(--brd)'}">
       <div class="uz-i">📋</div>
@@ -2655,6 +2696,7 @@ async function hEDefterFile(file){
   const ext=file.name.split('.').pop().toLowerCase();
   S.ed.log=[{t:'info',m:`Dosya: ${file.name} (${(file.size/1024).toFixed(0)}KB)`}];
   S.ed.dosyaAdi=file.name;
+  S.ed.rawFile=file; // kaydet için sakla
   S.ed.fisler=[];S.ed.ozet={};S.ed.hesapOzet=[];S.ed.anomaliler=[];
   S.ed.sirket={};S.ed.baslik={};
   rEDefter(document.getElementById('cont'));
