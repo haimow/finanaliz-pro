@@ -2402,6 +2402,12 @@ async function parseEDefterXML(file){
         fisler.push({fisNo,tarih,aciklama,satirlar,mesaiDisi,saat});
       });
 
+      // Hesap özeti — resolve'dan önce hesapOzet tanımla
+      const hesapOzet=Object.entries(hesaplar).map(([kod,v])=>({
+        kod,ad:v.ad,borç:v.borç,alacak:v.alacak,
+        bakiye:v.borç-v.alacak,fisSayisi:v.fisSayisi
+      })).sort((a,b)=>Math.abs(b.bakiye)-Math.abs(a.bakiye));
+
       // ══════════════════════════════════════════════════════════
       // ANOMALİ TESPİTİ — 37 Kategori
       // ══════════════════════════════════════════════════════════
