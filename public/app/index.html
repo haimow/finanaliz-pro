@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233b82f6'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='18' font-weight='bold'>F</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gotrue-js@0.9.29/dist/gotrue.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -975,26 +976,32 @@ async function getSupabaseAnonKey(){
   return null;
 }
 
-// ─── AUTH — Netlify Identity API (widget UI kaldırıldı) ─────────────────────
-let _authMode='login'; // 'login' | 'signup'
+// ─── AUTH — GoTrue-JS + Netlify Identity widget (Google OAuth) ──────────────
+let _goTrue = null;
+let _authMode = 'login';
+
+function getGoTrue(){
+  if(_goTrue) return _goTrue;
+  _goTrue = new GoTrue({
+    APIUrl: 'https://finanaliz.netlify.app/.netlify/identity',
+    setCookie: true,
+  });
+  return _goTrue;
+}
 
 function authSwitchTab(mode){
-  _authMode=mode;
-  const tl=document.getElementById('authTabLogin');
-  const ts=document.getElementById('authTabSignup');
-  const sb=document.getElementById('authSubmitBtn');
-  const fr=document.getElementById('authForgotRow');
+  _authMode = mode;
+  const tl=document.getElementById('authTabLogin'),ts=document.getElementById('authTabSignup');
+  const sb=document.getElementById('authSubmitBtn'),fr=document.getElementById('authForgotRow');
   if(!tl||!ts||!sb)return;
   if(mode==='login'){
-    tl.style.cssText=tl.style.cssText.replace('transparent','var(--ac)');tl.style.color='var(--t1)';tl.style.fontWeight='600';tl.style.borderBottom='2px solid var(--ac)';
+    tl.style.borderBottom='2px solid var(--ac)';tl.style.color='var(--t1)';tl.style.fontWeight='600';
     ts.style.borderBottom='2px solid transparent';ts.style.color='var(--tm)';ts.style.fontWeight='400';
-    sb.textContent='Giriş Yap';
-    if(fr)fr.style.display='block';
+    sb.textContent='Giriş Yap';if(fr)fr.style.display='block';
   }else{
-    ts.style.cssText=ts.style.cssText.replace('transparent','var(--ac)');ts.style.color='var(--t1)';ts.style.fontWeight='600';ts.style.borderBottom='2px solid var(--ac)';
+    ts.style.borderBottom='2px solid var(--ac)';ts.style.color='var(--t1)';ts.style.fontWeight='600';
     tl.style.borderBottom='2px solid transparent';tl.style.color='var(--tm)';tl.style.fontWeight='400';
-    sb.textContent='Hesap Oluştur';
-    if(fr)fr.style.display='none';
+    sb.textContent='Hesap Oluştur';if(fr)fr.style.display='none';
   }
   authShowMsg('','');
 }
@@ -1011,9 +1018,9 @@ function authShowMsg(text,type){
 
 function authSetLoading(loading){
   const btn=document.getElementById('authSubmitBtn');if(!btn)return;
-  btn.disabled=loading;
-  btn.style.opacity=loading?'.6':'1';
-  btn.textContent=loading?'Lütfen bekleyin...':((_authMode==='login')?'Giriş Yap':'Hesap Oluştur');
+  btn.disabled=loading;btn.style.opacity=loading?'.6':'1';
+  if(!loading)btn.textContent=_authMode==='login'?'Giriş Yap':'Hesap Oluştur';
+  else btn.textContent='Lütfen bekleyin...';
 }
 
 async function authSubmit(){
@@ -1021,27 +1028,27 @@ async function authSubmit(){
   const pass=document.getElementById('authPass')?.value||'';
   if(!email){authShowMsg('E-posta adresi gerekli.','err');return;}
   if(!pass||pass.length<6){authShowMsg('Şifre en az 6 karakter olmalı.','err');return;}
-  authSetLoading(true);
-  authShowMsg('','');
+  authSetLoading(true);authShowMsg('','');
+  const gt=getGoTrue();
   try{
     if(_authMode==='login'){
-      const user=await netlifyIdentity.login(email,pass);
-      if(user)showApp(user);
+      const user=await gt.login(email,pass,true);
+      showApp(user);
     }else{
-      await netlifyIdentity.signup(email,pass,{full_name:email.split('@')[0]});
-      authShowMsg('Kayıt başarılı! Lütfen e-postanızı doğrulayın, ardından giriş yapın.','ok');
+      await gt.signup(email,pass,{full_name:email.split('@')[0]});
+      authShowMsg('Kayıt başarılı! E-postanızı doğrulayın, ardından giriş yapın.','ok');
       authSwitchTab('login');
     }
   }catch(err){
-    const msg=err?.message||'';
-    if(msg.includes('Invalid')||msg.includes('invalid')||msg.includes('credentials'))
+    const msg=err?.json?.error_description||err?.message||String(err);
+    if(/invalid|credentials|email|password/i.test(msg))
       authShowMsg('E-posta veya şifre hatalı.','err');
-    else if(msg.includes('already registered')||msg.includes('already exists'))
+    else if(/already registered|already exists/i.test(msg))
       authShowMsg('Bu e-posta zaten kayıtlı. Giriş yapmayı deneyin.','err');
-    else if(msg.includes('confirm'))
-      authShowMsg('E-postanızı doğrulamadınız. Lütfen gelen kutusunu kontrol edin.','err');
+    else if(/confirm/i.test(msg))
+      authShowMsg('E-postanızı doğrulamadınız. Gelen kutusunu kontrol edin.','err');
     else
-      authShowMsg('Bir hata oluştu: '+msg,'err');
+      authShowMsg('Hata: '+msg,'err');
   }
   authSetLoading(false);
 }
@@ -1050,34 +1057,24 @@ async function authForgot(){
   const email=(document.getElementById('authEmail')?.value||'').trim();
   if(!email){authShowMsg('Önce e-posta adresinizi girin.','err');return;}
   try{
-    await netlifyIdentity.requestPasswordRecovery(email);
-    authShowMsg('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.','ok');
-  }catch(e){
-    authShowMsg('Gönderilemedi: '+(e?.message||''),'err');
-  }
+    await getGoTrue().requestPasswordRecovery(email);
+    authShowMsg('Şifre sıfırlama bağlantısı e-postanıza gönderildi.','ok');
+  }catch(e){authShowMsg('Gönderilemedi: '+(e?.message||''),'err');}
 }
 
 function authGoogle(){
-  // Google OAuth — Netlify Identity provider flow
   netlifyIdentity.open('login');
 }
 
 function initAuth(){
-  netlifyIdentity.on('init',user=>{
-    if(user)showApp(user);else showAuthOverlay();
-  });
-  netlifyIdentity.on('login',user=>{
-    netlifyIdentity.close();
-    setTimeout(()=>showApp(user),100);
-  });
-  netlifyIdentity.on('logout',()=>{
-    S.user=null;
-    const ov=document.getElementById('authOverlay');
-    ov.style.zIndex='100';
-    ov.style.display='flex';
-    document.getElementById('app').style.display='none';
-  });
+  netlifyIdentity.on('login',user=>{netlifyIdentity.close();setTimeout(()=>showApp(user),100);});
+  netlifyIdentity.on('logout',()=>{S.user=null;showAuthOverlay();});
   netlifyIdentity.init({APIUrl:'https://finanaliz.netlify.app/.netlify/identity'});
+  // Mevcut GoTrue oturumunu kontrol et
+  try{
+    const u=getGoTrue().currentUser();
+    if(u)showApp(u);else netlifyIdentity.on('init',user=>{if(user)showApp(user);else showAuthOverlay();});
+  }catch(e){netlifyIdentity.on('init',user=>{if(user)showApp(user);else showAuthOverlay();});}
 }
 
 function showAuthOverlay(){
@@ -1105,9 +1102,14 @@ function doLogout(){if(confirm('Çıkış yapmak istiyor musunuz?'))netlifyIdent
 // ─── SUPABASE HELPERS ────────────────────────────────────────────────────────
 async function sbCall(action,data={}){
   if(!S.user)return{error:'Oturum yok'};
-  // JWT token al — plain email değil imzalı token gönder
+  // JWT token al — GoTrue veya Netlify Identity widget'tan
   let token='';
-  try{const cu=netlifyIdentity.currentUser();if(cu)token=await cu.jwt();}catch(e){}
+  try{
+    const gt=getGoTrue();
+    const cu=gt.currentUser();
+    if(cu) token=await cu.jwt();
+    else{const ncu=netlifyIdentity.currentUser();if(ncu)token=await ncu.jwt();}
+  }catch(e){}
   try{
     const r=await fetch('/api/supabase',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action,data})});
     return r.json();
