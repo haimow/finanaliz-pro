@@ -1062,54 +1062,60 @@ async function authForgot(){
 }
 
 function authGoogle(){
-  // GoTrue provider redirect — widget açmaz, doğrudan Google'a yönlendirir
   try{
-    getGoTrue().loginExternalProvider('google');
+    const url = getGoTrue().loginExternalUrl('google');
+    window.location.href = url;
   }catch(e){
-    authShowMsg('Google girişi şu an kullanılamıyor: '+e.message,'err');
+    authShowMsg('Google girişi başlatılamadı: '+e.message,'err');
   }
 }
 
 function initAuth(){
-  const gt=getGoTrue();
+  const gt = getGoTrue();
 
-  // Sayfa yüklenince URL'de token varsa (OAuth redirect dönüşü)
-  if(window.location.hash&&window.location.hash.includes('access_token')){
-    gt.currentUser()?.reload().then(user=>{
-      if(user){history.replaceState(null,'',window.location.pathname);showApp(user);}
-      else showAuthOverlay();
-    }).catch(()=>showAuthOverlay());
-    return;
-  }
+  // URL hash'inde token var mı? (OAuth redirect veya e-posta link dönüşü)
+  const hash = window.location.hash;
+  if(hash && hash.length > 1){
+    const params = new URLSearchParams(hash.replace('#',''));
+    const accessToken = params.get('access_token');
+    const confirmToken = params.get('confirmation_token');
+    const recoveryToken = params.get('recovery_token');
 
-  // Netlify Identity confirmation/recovery token işleme
-  const params=new URLSearchParams(window.location.search);
-  const hashParams=new URLSearchParams(window.location.hash.replace('#',''));
-  const confirmToken=hashParams.get('confirmation_token')||params.get('confirmation_token');
-  const recoveryToken=hashParams.get('recovery_token')||params.get('recovery_token');
-
-  if(confirmToken){
-    gt.confirm(confirmToken).then(user=>{
-      history.replaceState(null,'',window.location.pathname);
-      showApp(user);
-    }).catch(e=>{showAuthOverlay();setTimeout(()=>authShowMsg('E-posta doğrulama başarısız: '+e.message,'err'),300);});
-    return;
-  }
-  if(recoveryToken){
-    gt.recover(recoveryToken).then(user=>{
-      history.replaceState(null,'',window.location.pathname);
-      showApp(user);
-      setTimeout(()=>authShowMsg('Şifrenizi değiştirebilirsiniz.','ok'),300);
-    }).catch(()=>showAuthOverlay());
-    return;
+    if(accessToken){
+      // Google OAuth veya provider redirect dönüşü
+      gt.createUser({access_token:accessToken, token_type:'bearer',
+        expires_in:parseInt(params.get('expires_in')||'3600'),
+        refresh_token:params.get('refresh_token')||''}, true)
+        .then(user=>{history.replaceState(null,'',window.location.pathname);showApp(user);})
+        .catch(()=>{
+          // createUser başarısız olursa mevcut kullanıcıyı dene
+          const u=gt.currentUser();
+          if(u){history.replaceState(null,'',window.location.pathname);showApp(u);}
+          else showAuthOverlay();
+        });
+      return;
+    }
+    if(confirmToken){
+      gt.confirm(confirmToken, true)
+        .then(user=>{history.replaceState(null,'',window.location.pathname);showApp(user);})
+        .catch(e=>{showAuthOverlay();setTimeout(()=>authShowMsg('Doğrulama başarısız: '+e.message,'err'),300);});
+      return;
+    }
+    if(recoveryToken){
+      gt.recover(recoveryToken, true)
+        .then(user=>{history.replaceState(null,'',window.location.pathname);showApp(user);})
+        .catch(()=>showAuthOverlay());
+      return;
+    }
   }
 
   // Normal yükleme — mevcut oturum var mı?
-  const currentUser=gt.currentUser();
+  const currentUser = gt.currentUser();
   if(currentUser){
-    // Token yenile ve devam et
-    currentUser.jwt().then(()=>showApp(currentUser)).catch(()=>showAuthOverlay());
-  }else{
+    currentUser.jwt(true) // force refresh
+      .then(()=>showApp(currentUser))
+      .catch(()=>showAuthOverlay());
+  } else {
     showAuthOverlay();
   }
 }
