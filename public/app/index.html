@@ -6,7 +6,6 @@
 <title>FinAnaliz Pro — Finansal Analiz Platformu</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233b82f6'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='18' font-weight='bold'>F</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gotrue-js@0.9.29/dist/gotrue.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -1063,18 +1062,56 @@ async function authForgot(){
 }
 
 function authGoogle(){
-  netlifyIdentity.open('login');
+  // GoTrue provider redirect — widget açmaz, doğrudan Google'a yönlendirir
+  try{
+    getGoTrue().loginExternalProvider('google');
+  }catch(e){
+    authShowMsg('Google girişi şu an kullanılamıyor: '+e.message,'err');
+  }
 }
 
 function initAuth(){
-  netlifyIdentity.on('login',user=>{netlifyIdentity.close();setTimeout(()=>showApp(user),100);});
-  netlifyIdentity.on('logout',()=>{S.user=null;showAuthOverlay();});
-  netlifyIdentity.init({APIUrl:'https://finanaliz.netlify.app/.netlify/identity'});
-  // Mevcut GoTrue oturumunu kontrol et
-  try{
-    const u=getGoTrue().currentUser();
-    if(u)showApp(u);else netlifyIdentity.on('init',user=>{if(user)showApp(user);else showAuthOverlay();});
-  }catch(e){netlifyIdentity.on('init',user=>{if(user)showApp(user);else showAuthOverlay();});}
+  const gt=getGoTrue();
+
+  // Sayfa yüklenince URL'de token varsa (OAuth redirect dönüşü)
+  if(window.location.hash&&window.location.hash.includes('access_token')){
+    gt.currentUser()?.reload().then(user=>{
+      if(user){history.replaceState(null,'',window.location.pathname);showApp(user);}
+      else showAuthOverlay();
+    }).catch(()=>showAuthOverlay());
+    return;
+  }
+
+  // Netlify Identity confirmation/recovery token işleme
+  const params=new URLSearchParams(window.location.search);
+  const hashParams=new URLSearchParams(window.location.hash.replace('#',''));
+  const confirmToken=hashParams.get('confirmation_token')||params.get('confirmation_token');
+  const recoveryToken=hashParams.get('recovery_token')||params.get('recovery_token');
+
+  if(confirmToken){
+    gt.confirm(confirmToken).then(user=>{
+      history.replaceState(null,'',window.location.pathname);
+      showApp(user);
+    }).catch(e=>{showAuthOverlay();setTimeout(()=>authShowMsg('E-posta doğrulama başarısız: '+e.message,'err'),300);});
+    return;
+  }
+  if(recoveryToken){
+    gt.recover(recoveryToken).then(user=>{
+      history.replaceState(null,'',window.location.pathname);
+      showApp(user);
+      setTimeout(()=>authShowMsg('Şifrenizi değiştirebilirsiniz.','ok'),300);
+    }).catch(()=>showAuthOverlay());
+    return;
+  }
+
+  // Normal yükleme — mevcut oturum var mı?
+  const currentUser=gt.currentUser();
+  if(currentUser){
+    // Token yenile ve devam et
+    currentUser.jwt().then(()=>showApp(currentUser)).catch(()=>showAuthOverlay());
+  }else{
+    showAuthOverlay();
+  }
 }
 
 function showAuthOverlay(){
@@ -1097,18 +1134,22 @@ function showApp(user){
   render();
 }
 
-function doLogout(){if(confirm('Çıkış yapmak istiyor musunuz?'))netlifyIdentity.logout()}
+function doLogout(){
+  if(!confirm('Çıkış yapmak istiyor musunuz?'))return;
+  const u=getGoTrue().currentUser();
+  if(u) u.logout().catch(()=>{});
+  S.user=null;
+  showAuthOverlay();
+}
 
 // ─── SUPABASE HELPERS ────────────────────────────────────────────────────────
 async function sbCall(action,data={}){
   if(!S.user)return{error:'Oturum yok'};
-  // JWT token al — GoTrue veya Netlify Identity widget'tan
+  // JWT token al — GoTrue'dan
   let token='';
   try{
-    const gt=getGoTrue();
-    const cu=gt.currentUser();
+    const cu=getGoTrue().currentUser();
     if(cu) token=await cu.jwt();
-    else{const ncu=netlifyIdentity.currentUser();if(ncu)token=await ncu.jwt();}
   }catch(e){}
   try{
     const r=await fetch('/api/supabase',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action,data})});
