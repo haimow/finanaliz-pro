@@ -3862,377 +3862,370 @@ async function runEDefterAI(){
   rEDefter(document.getElementById('cont'));
 }
 
+
 // ─── CHECKLİST VERİ YAPISI ────────────────────────────────────────────────────
 const CL_LISTELER = {
   kurumlar: {
-    ad: 'Kurumlar Vergisi Beyannamesi',
-    emoji: '🏢',
-    renk: '#ef4444',
+    ad: 'Kurumlar Vergisi', emoji: '🏢', renk: '#ef4444', son: 'Nisan sonu',
     aciklama: 'Hesap dönemi kapanışı ve KV beyannamesi öncesi kontrol listesi',
-    son: 'Nisan sonu',
     bolumler: [
-      {
-        ad: 'Mizan ve Bilanço Kontrolü',
-        maddeler: [
-          'Dönem sonu mizan alındı ve kontrol edildi',
-          'Aktif-Pasif denkliği sağlandı (fark sıfır)',
-          'Tüm hesapların kapanış bakiyeleri doğrulandı',
-          'Geçici hesaplar (195, 196, 396, 397) kapatıldı',
-          'Sayım ve tesellüm noksanları (197/397) giderildi',
-          'Enflasyon düzeltmesi uygulandıysa kontrol edildi',
-        ]
-      },
-      {
-        ad: 'Alacak ve Borçlar',
-        maddeler: [
-          'Şüpheli alacak karşılığı (128/129) gözden geçirildi',
-          'Değersiz alacaklar tespit edildi ve kayıt yapıldı',
-          'Alacak ve borç mutabakatları tamamlandı',
-          '120/320 cari hesap mutabakatı yapıldı',
-          'Yabancı para pozisyonu değerlendi (kur farkı)',
-          'Senetli alacak/borçlar reeskont hesaplandı',
-        ]
-      },
-      {
-        ad: 'Stok ve Maddi Duran Varlıklar',
-        maddeler: [
-          'Dönem sonu stok sayımı yapıldı ve kayıt altına alındı',
-          'Fire ve zaiyat tutanakları hazırlandı',
-          'Amortisman tablosu güncellendi (257/268/278)',
-          'Yeni alınan varlıklar aktifleştirildi',
-          'Elden çıkarılan varlıkların kayıtları silindi',
-          'Maddi duran varlık değer düşüklüğü kontrol edildi',
-        ]
-      },
-      {
-        ad: 'Gelir ve Giderler',
-        maddeler: [
-          'Dönemsellik ilkesi gereği tahakkuk ve ön ödemeler kaydedildi',
-          '180/280 gelecek dönem giderleri ayrıştırıldı',
-          '380/480 gelecek dönem gelirleri ayrıştırıldı',
-          'KKEG (kanunen kabul edilmeyen giderler) listesi hazırlandı',
-          'Bağış ve yardımlar belgelendi ve sınırları kontrol edildi',
-          'Ar-Ge ve inovasyon indirimleri hesaplandı (varsa)',
-        ]
-      },
-      {
-        ad: 'Vergi Hesaplamaları',
-        maddeler: [
-          'Kurumlar vergisi matrahı hesaplandı',
-          'Geçici vergi ödemeleri mahsup edildi',
-          'Yatırım indirimi (varsa) hesaplandı ve belgelendi',
-          'İstisnalar ve indirimler uygulandı (iştirak kazancı vb.)',
-          'Vergiye tabi matrah üzerinden vergi hesaplandı (%25)',
-          'Vergi karşılığı muhasebeleştirildi (370/371)',
-        ]
-      },
-      {
-        ad: 'Beyanname Hazırlık',
-        maddeler: [
-          'Kurumlar vergisi beyannamesi taslağı hazırlandı',
-          'Eklere (amortisman listesi, yatırım indirimi vb.) kontrol edildi',
-          'Beyanname mükellefle mutabık kalındı ve imzalatıldı',
-          'E-beyanname sisteme yüklendi ve onaylandı',
-          'Ödeme planı oluşturuldu (taksit tarihleri)',
-          'Vergi levhası güncellendi',
-        ]
-      },
+      { ad: 'Mizan ve Bilanço Kontrolü', maddeler: [
+        {m:'Dönem sonu mizan alındı ve kontrol edildi', p:'yuksek'},
+        {m:'Aktif-Pasif denkliği sağlandı (fark sıfır)', p:'yuksek'},
+        {m:'Tüm hesapların kapanış bakiyeleri doğrulandı', p:'normal'},
+        {m:'Geçici hesaplar (195, 196, 396, 397) kapatıldı', p:'normal'},
+        {m:'Sayım ve tesellüm noksanları (197/397) giderildi', p:'normal'},
+        {m:'Enflasyon düzeltmesi uygulandıysa kontrol edildi', p:'normal'},
+      ]},
+      { ad: 'Alacak ve Borçlar', maddeler: [
+        {m:'Şüpheli alacak karşılığı (128/129) gözden geçirildi', p:'yuksek'},
+        {m:'Değersiz alacaklar tespit edildi ve kayıt yapıldı', p:'normal'},
+        {m:'Alacak ve borç mutabakatları tamamlandı', p:'yuksek'},
+        {m:'120/320 cari hesap mutabakatı yapıldı', p:'normal'},
+        {m:'Yabancı para pozisyonu değerlendi (kur farkı)', p:'normal'},
+        {m:'Senetli alacak/borçlar reeskont hesaplandı', p:'normal'},
+      ]},
+      { ad: 'Stok ve Maddi Duran Varlıklar', maddeler: [
+        {m:'Dönem sonu stok sayımı yapıldı ve kayıt altına alındı', p:'yuksek'},
+        {m:'Fire ve zaiyat tutanakları hazırlandı', p:'normal'},
+        {m:'Amortisman tablosu güncellendi (257/268/278)', p:'yuksek'},
+        {m:'Yeni alınan varlıklar aktifleştirildi', p:'normal'},
+        {m:'Elden çıkarılan varlıkların kayıtları silindi', p:'normal'},
+        {m:'Maddi duran varlık değer düşüklüğü kontrol edildi', p:'normal'},
+      ]},
+      { ad: 'Gelir ve Giderler', maddeler: [
+        {m:'Dönemsellik ilkesi — tahakkuk ve ön ödemeler kaydedildi', p:'yuksek'},
+        {m:'180/280 gelecek dönem giderleri ayrıştırıldı', p:'normal'},
+        {m:'380/480 gelecek dönem gelirleri ayrıştırıldı', p:'normal'},
+        {m:'KKEG listesi hazırlandı', p:'yuksek'},
+        {m:'Bağış ve yardımlar belgelendi ve sınırları kontrol edildi', p:'normal'},
+        {m:'Ar-Ge ve inovasyon indirimleri hesaplandı (varsa)', p:'normal'},
+      ]},
+      { ad: 'Vergi Hesaplamaları', maddeler: [
+        {m:'Kurumlar vergisi matrahı hesaplandı', p:'yuksek'},
+        {m:'Geçici vergi ödemeleri mahsup edildi', p:'yuksek'},
+        {m:'Yatırım indirimi (varsa) hesaplandı ve belgelendi', p:'normal'},
+        {m:'İstisnalar ve indirimler uygulandı', p:'normal'},
+        {m:'Vergiye tabi matrah üzerinden vergi hesaplandı (%25)', p:'yuksek'},
+        {m:'Vergi karşılığı muhasebeleştirildi (370/371)', p:'normal'},
+      ]},
+      { ad: 'Beyanname Hazırlık', maddeler: [
+        {m:'Kurumlar vergisi beyannamesi taslağı hazırlandı', p:'yuksek'},
+        {m:'Eklere (amortisman listesi vb.) kontrol edildi', p:'normal'},
+        {m:'Beyanname mükellefle mutabık kalındı ve imzalatıldı', p:'yuksek'},
+        {m:'E-beyanname sisteme yüklendi ve onaylandı', p:'yuksek'},
+        {m:'Ödeme planı oluşturuldu (taksit tarihleri)', p:'normal'},
+        {m:'Vergi levhası güncellendi', p:'normal'},
+      ]},
     ]
   },
-
   gecici: {
-    ad: 'Geçici Vergi Beyannamesi',
-    emoji: '📊',
-    renk: '#f59e0b',
+    ad: 'Geçici Vergi', emoji: '📊', renk: '#f59e0b', son: 'Her dönem 17.',
     aciklama: '3 aylık dönem sonunda geçici vergi beyannamesi öncesi kontroller',
-    son: 'Her dönem 17. gün',
     bolumler: [
-      {
-        ad: 'Dönem Sonu Mizan',
-        maddeler: [
-          'Dönem mizanı alındı (3 aylık)',
-          'Gelir tablosu hesapları kontrol edildi',
-          'Bilanço hesapları gözden geçirildi',
-          'Kasa ve banka tutarları mutabık',
-        ]
-      },
-      {
-        ad: 'Gelir ve Gider Kontrolü',
-        maddeler: [
-          'Net satışlar doğrulandı (600-610 farkı)',
-          'Satışların maliyeti (620-622) kontrol edildi',
-          'Faaliyet giderleri (631-632) doğrulandı',
-          'Finansman giderleri (660-661) kontrol edildi',
-          'Tahakkuk etmemiş gelir/gider ayrıştırıldı',
-        ]
-      },
-      {
-        ad: 'Vergi Matrahı ve Hesaplama',
-        maddeler: [
-          'Dönem ticari karı hesaplandı',
-          'KKEG kalemleri eklendi',
-          'İstisnalar düşüldü',
-          'Geçici vergi matrahı belirlendi',
-          'Geçici vergi hesaplandı (%25)',
-          'Önceki dönem geçici vergileri mahsup edildi',
-        ]
-      },
-      {
-        ad: 'Beyanname',
-        maddeler: [
-          'Geçici vergi beyannamesi hazırlandı',
-          'Beyanname sisteme gönderildi',
-          'Ödeme zamanında yapıldı / planlandı',
-          'Bir sonraki dönem için hatırlatma oluşturuldu',
-        ]
-      },
+      { ad: 'Dönem Sonu Mizan', maddeler: [
+        {m:'Dönem mizanı alındı (3 aylık)', p:'yuksek'},
+        {m:'Gelir tablosu hesapları kontrol edildi', p:'yuksek'},
+        {m:'Bilanço hesapları gözden geçirildi', p:'normal'},
+        {m:'Kasa ve banka tutarları mutabık', p:'normal'},
+      ]},
+      { ad: 'Gelir ve Gider Kontrolü', maddeler: [
+        {m:'Net satışlar doğrulandı (600-610 farkı)', p:'yuksek'},
+        {m:'Satışların maliyeti (620-622) kontrol edildi', p:'normal'},
+        {m:'Faaliyet giderleri (631-632) doğrulandı', p:'normal'},
+        {m:'Finansman giderleri (660-661) kontrol edildi', p:'normal'},
+        {m:'Tahakkuk etmemiş gelir/gider ayrıştırıldı', p:'normal'},
+        {m:'KKEG kalemleri belirlendi', p:'yuksek'},
+        {m:'İstisna ve indirimler uygulandı', p:'normal'},
+        {m:'Enflasyon düzeltmesi etkisi değerlendirildi', p:'normal'},
+        {m:'Örtülü sermaye ve transfer fiyatlandırması incelendi', p:'normal'},
+        {m:'Kanunen kabul edilmeyen gider düzeltmeleri yapıldı', p:'normal'},
+        {m:'Yatırım indirimi (varsa) hesaplandı', p:'normal'},
+        {m:'Geçmiş yıl zararları mahsubu yapıldı (varsa)', p:'normal'},
+      ]},
+      { ad: 'Vergi Matrahı ve Hesaplama', maddeler: [
+        {m:'Dönem ticari karı hesaplandı', p:'yuksek'},
+        {m:'Geçici vergi matrahı belirlendi', p:'yuksek'},
+        {m:'Geçici vergi hesaplandı (%25)', p:'yuksek'},
+        {m:'Önceki dönem geçici vergileri mahsup edildi', p:'normal'},
+        {m:'Tevkif suretiyle ödenen vergiler mahsup edildi', p:'normal'},
+        {m:'Ödenecek geçici vergi tutarı hesaplandı', p:'yuksek'},
+      ]},
+      { ad: 'Beyanname ve Ödeme', maddeler: [
+        {m:'Geçici vergi beyannamesi hazırlandı', p:'yuksek'},
+        {m:'Beyanname sisteme gönderildi', p:'yuksek'},
+        {m:'Ödeme zamanında yapıldı / planlandı', p:'yuksek'},
+        {m:'Bir sonraki dönem için hatırlatma oluşturuldu', p:'normal'},
+      ]},
     ]
   },
-
   kdv: {
-    ad: 'KDV Beyannamesi',
-    emoji: '🧾',
-    renk: '#3b82f6',
+    ad: 'KDV Beyannamesi', emoji: '🧾', renk: '#3b82f6', son: 'Her ay 24.',
     aciklama: 'Aylık KDV beyannamesi öncesi kontrol ve mutabakat listesi',
-    son: 'Her ay 24.',
     bolumler: [
-      {
-        ad: 'Satış Faturaları ve Hasılat',
-        maddeler: [
-          'Tüm satış faturaları e-fatura/e-arşiv sistemiyle mutabık',
-          'KDV oranları doğrulandı (%1 / %10 / %20)',
-          'İhracat faturaları ayrıştırıldı (KDV istisnası)',
-          'İade hakkı doğuran işlemler belirlendi',
-          'Tevkifatlı işlemler ayrıştırıldı',
-        ]
-      },
-      {
-        ad: 'Alış Faturaları ve İndirimler',
-        maddeler: [
-          'Tüm alış faturaları gider ve stok kayıtlarıyla mutabık',
-          'İndirilemeyen KDV kalemleri tespit edildi',
-          'Özel matrah şekline tabi alışlar kontrol edildi',
-          '191 hesabı bakiyesi doğrulandı',
-        ]
-      },
-      {
-        ad: 'KDV Hesaplama',
-        maddeler: [
-          'Hesaplanan KDV (391) toplamı doğrulandı',
-          'İndirilecek KDV (191) toplamı doğrulandı',
-          'Ödenmesi gereken / devreden KDV hesaplandı',
-          'Devreden KDV önceki dönemle uyumlu',
-          'İade talebi oluşacaksa belgeleri hazırlandı',
-        ]
-      },
-      {
-        ad: 'Beyanname',
-        maddeler: [
-          'KDV beyannamesi hazırlandı ve kontrol edildi',
-          'BA-BS formuyla tutarlılık sağlandı',
-          'Beyanname sisteme gönderildi',
-          'Ödeme zamanında yapıldı',
-        ]
-      },
+      { ad: 'Satış Faturaları ve Hasılat', maddeler: [
+        {m:'Tüm satış faturaları e-fatura/e-arşiv sistemiyle mutabık', p:'yuksek'},
+        {m:'KDV oranları doğrulandı (%1 / %10 / %20)', p:'yuksek'},
+        {m:'İhracat faturaları ayrıştırıldı (KDV istisnası)', p:'normal'},
+        {m:'İade hakkı doğuran işlemler belirlendi', p:'normal'},
+        {m:'Tevkifatlı işlemler ayrıştırıldı', p:'normal'},
+      ]},
+      { ad: 'Alış Faturaları ve İndirimler', maddeler: [
+        {m:'Tüm alış faturaları muhasebe kayıtlarıyla mutabık', p:'yuksek'},
+        {m:'İndirilemeyen KDV kalemleri tespit edildi', p:'normal'},
+        {m:'Özel matrah şekline tabi alışlar kontrol edildi', p:'normal'},
+        {m:'191 hesabı bakiyesi doğrulandı', p:'yuksek'},
+      ]},
+      { ad: 'KDV Hesaplama ve Beyanname', maddeler: [
+        {m:'Hesaplanan KDV (391) toplamı doğrulandı', p:'yuksek'},
+        {m:'İndirilecek KDV (191) toplamı doğrulandı', p:'yuksek'},
+        {m:'Ödenmesi gereken / devreden KDV hesaplandı', p:'yuksek'},
+        {m:'Devreden KDV önceki dönemle uyumlu', p:'normal'},
+        {m:'KDV beyannamesi hazırlandı ve gönderildi', p:'yuksek'},
+        {m:'Ödeme zamanında yapıldı', p:'normal'},
+      ]},
     ]
   },
-
-  babs: {
-    ad: 'BA-BS Formları',
-    emoji: '📋',
-    renk: '#8b5cf6',
-    aciklama: 'Aylık BA (alış) ve BS (satış) bildirim formları kontrolü',
-    son: 'Her ay sonu',
+  enflasyon: {
+    ad: 'Enflasyon Muhasebesi', emoji: '📈', renk: '#8b5cf6', son: 'Yıl sonu',
+    aciklama: 'VUK mükerrer 298. madde kapsamında enflasyon düzeltmesi kontrol listesi',
     bolumler: [
-      {
-        ad: 'BA Formu (Alışlar)',
-        maddeler: [
-          'Dönem içi 5.000 ₺ ve üzeri tüm alışlar listelendi',
-          'Tedarikçi VKN bilgileri doğrulandı',
-          'Fatura tarihleri ve numaraları kontrol edildi',
-          'Muhasebe kayıtlarıyla mutabakat sağlandı',
-          'İthalat ve yurt içi alışlar ayrıştırıldı',
-        ]
-      },
-      {
-        ad: 'BS Formu (Satışlar)',
-        maddeler: [
-          'Dönem içi 5.000 ₺ ve üzeri tüm satışlar listelendi',
-          'Müşteri VKN bilgileri doğrulandı',
-          'e-Fatura ve e-Arşiv fatura tutarları mutabık',
-          'Muhasebe kayıtlarıyla mutabakat sağlandı',
-          'İhracat ve yurt içi satışlar ayrıştırıldı',
-        ]
-      },
-      {
-        ad: 'Mutabakat ve Gönderim',
-        maddeler: [
-          'BA toplam tutarı muhasebe alış toplamıyla uyumlu',
-          'BS toplam tutarı muhasebe satış toplamıyla uyumlu',
-          'Karşılıklı bildirim farklılıkları incelendi',
-          'Form sisteme gönderildi ve onaylandı',
-        ]
-      },
+      { ad: 'Genel Hazırlık', maddeler: [
+        {m:'Yasal defter tasdikleri kontrol edildi', p:'yuksek'},
+        {m:'Enflasyon düzeltmesine tabi dönem belirlendi', p:'yuksek'},
+        {m:'Yurt içi ÜFE endeksleri temin edildi (TÜİK)', p:'yuksek'},
+        {m:'Düzeltme kapsamındaki hesaplar belirlendi', p:'normal'},
+        {m:'Parasal / parasal olmayan kalemler ayrıştırıldı', p:'yuksek'},
+        {m:'Muhasebe yazılımı enflasyon düzeltmesine uyumlu mu?', p:'normal'},
+      ]},
+      { ad: 'Parasal Olmayan Kalemlerin Düzeltilmesi', maddeler: [
+        {m:'Stoklar düzeltme katsayısıyla yeniden değerlendi', p:'yuksek'},
+        {m:'Maddi duran varlıklar ve birikmiş amortisman düzeltildi', p:'yuksek'},
+        {m:'Mali duran varlıklar düzeltildi', p:'normal'},
+        {m:'Öz kaynaklar kalemleri düzeltildi', p:'yuksek'},
+        {m:'Sermaye ve yedekler düzeltme farkları hesaplandı', p:'normal'},
+      ]},
+      { ad: 'Düzeltme Farklarının Muhasebeleştirilmesi', maddeler: [
+        {m:'698 enflasyon düzeltme hesabı açıldı', p:'yuksek'},
+        {m:'Düzeltme farkları ilgili hesaplara kaydedildi', p:'yuksek'},
+        {m:'Düzeltilmiş bilanço hazırlandı', p:'yuksek'},
+        {m:'Düzeltilmiş gelir tablosu hazırlandı', p:'normal'},
+        {m:'Aktif-Pasif denkliği düzeltme sonrası kontrol edildi', p:'yuksek'},
+      ]},
+      { ad: 'Vergisel Etkiler', maddeler: [
+        {m:'2023 düzeltme farkları vergi matrahı dışında mı?', p:'yuksek'},
+        {m:'Amortisman hesaplamaları düzeltilmiş değerler üzerinden mi?', p:'normal'},
+        {m:'Stok maliyeti düzeltilmiş değerle mi hesaplanıyor?', p:'normal'},
+        {m:'Geçici vergi hesaplamalarında düzeltilmiş değerler kullanılıyor mu?', p:'yuksek'},
+        {m:'Kurumlar vergisi matrahına etkisi değerlendirildi', p:'yuksek'},
+      ]},
     ]
   },
 };
 
-// ─── CHECKLİST FONKSİYONLARI ─────────────────────────────────────────────────
-function clKey(liste, bolum, idx) {
-  return `cl_${liste}_${bolum}_${idx}`;
+// ─── STATE & STORAGE ─────────────────────────────────────────────────────────
+function clLoad() {
+  try { const s=localStorage.getItem('dm_cl'); if(s) S.cl.kaydedilen=JSON.parse(s); } catch(e){}
+}
+function clSave() {
+  try { localStorage.setItem('dm_cl', JSON.stringify(S.cl.kaydedilen)); } catch(e){}
+}
+function clKey(liste,bi,mi){ return `${liste}_${bi}_${mi}`; }
+
+function clStats(liste) {
+  const l=CL_LISTELER[liste]; let t=0,done=0,yuksek=0,yuksekDone=0;
+  l.bolumler.forEach((b,bi)=>b.maddeler.forEach((m,mi)=>{
+    t++;
+    const k=clKey(liste,bi,mi);
+    if(S.cl.kaydedilen[k]) done++;
+    if(m.p==='yuksek'){ yuksek++; if(S.cl.kaydedilen[k]) yuksekDone++; }
+  }));
+  return {t,done,bekleyen:t-done,yuksek,yuksekDone,pct:t?Math.round(done/t*100):0};
 }
 
-function clGetDurum(liste) {
-  const l = CL_LISTELER[liste];
-  if(!l) return {toplam:0, tamamlanan:0};
-  let toplam = 0, tamamlanan = 0;
-  l.bolumler.forEach((b, bi) => {
-    b.maddeler.forEach((_, mi) => {
-      toplam++;
-      if(S.cl.kaydedilen[clKey(liste, bi, mi)]) tamamlanan++;
-    });
-  });
-  return {toplam, tamamlanan};
+function clToggle(liste,bi,mi) {
+  const k=clKey(liste,bi,mi);
+  S.cl.kaydedilen[k]=!S.cl.kaydedilen[k];
+  clSave();
+  // Satırı güncelle
+  const row=document.getElementById('clr_'+k);
+  const chk=document.getElementById('clc_'+k);
+  const txt=document.getElementById('clt_'+k);
+  const done=S.cl.kaydedilen[k];
+  if(row){ row.style.background=done?'rgba(16,185,129,.05)':'var(--bgi)'; row.style.borderColor=done?'rgba(16,185,129,.25)':'var(--brd)'; }
+  if(chk){
+    chk.innerHTML=done
+      ?`<svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+      :'';
+    chk.style.background=done?'var(--gn)':'transparent';
+    chk.style.borderColor=done?'var(--gn)':'var(--brd)';
+  }
+  if(txt){ txt.style.textDecoration=done?'line-through':'none'; txt.style.color=done?'var(--tm)':'var(--t2)'; }
+  _clRefreshStats(liste);
 }
 
-function clToggle(liste, bolum, idx) {
-  const key = clKey(liste, bolum, idx);
-  S.cl.kaydedilen[key] = !S.cl.kaydedilen[key];
-  // LocalStorage'a kaydet (auth gerektirmez, tarayıcıda saklanır)
-  try { localStorage.setItem('dijitalmizan_cl', JSON.stringify(S.cl.kaydedilen)); } catch(e){}
-  // Sadece progress ve maddeyi güncelle (full re-render olmadan)
-  _clUpdateProgress(liste);
-  const cb = document.getElementById('cl_cb_'+clKey(liste,bolum,idx));
-  const row = document.getElementById('cl_row_'+clKey(liste,bolum,idx));
-  if(cb) cb.checked = !!S.cl.kaydedilen[key];
-  if(row) row.style.opacity = S.cl.kaydedilen[key] ? '0.5' : '1';
-}
-
-function _clUpdateProgress(liste) {
-  const d = clGetDurum(liste);
-  const pct = d.toplam > 0 ? Math.round(d.tamamlanan / d.toplam * 100) : 0;
-  const bar = document.getElementById('cl_bar_' + liste);
-  const txt = document.getElementById('cl_pct_' + liste);
-  if(bar) bar.style.width = pct + '%';
-  if(txt) txt.textContent = pct + '%';
+function _clRefreshStats(liste) {
+  const s=clStats(liste);
+  const pctRenk=s.pct===100?'var(--gn)':s.pct>=60?'var(--am)':'var(--ac)';
+  const els={
+    done: document.getElementById('cl_stat_done_'+liste),
+    bek:  document.getElementById('cl_stat_bek_'+liste),
+    pct:  document.getElementById('cl_stat_pct_'+liste),
+    bar:  document.getElementById('cl_bar_'+liste),
+    tabpct: document.getElementById('cl_tab_pct_'+liste),
+  };
+  if(els.done) els.done.textContent=s.done;
+  if(els.bek)  els.bek.textContent=s.bekleyen;
+  if(els.pct)  { els.pct.textContent=s.pct+'%'; els.pct.style.color=pctRenk; }
+  if(els.bar)  { els.bar.style.width=s.pct+'%'; els.bar.style.background=pctRenk; }
+  if(els.tabpct) { els.tabpct.textContent=s.done+'/'+s.t; }
 }
 
 function clSifirla(liste) {
-  if(!confirm('Bu listedeki tüm işaretler sıfırlansın mı?')) return;
-  const l = CL_LISTELER[liste];
-  l.bolumler.forEach((b, bi) => {
-    b.maddeler.forEach((_, mi) => {
-      delete S.cl.kaydedilen[clKey(liste, bi, mi)];
-    });
-  });
-  try { localStorage.setItem('dijitalmizan_cl', JSON.stringify(S.cl.kaydedilen)); } catch(e){}
+  if(!confirm('Bu listedeki tüm işaretler sıfırlansın mı?'))return;
+  const l=CL_LISTELER[liste];
+  l.bolumler.forEach((b,bi)=>b.maddeler.forEach((_,mi)=>delete S.cl.kaydedilen[clKey(liste,bi,mi)]));
+  clSave();
+  rChecklist(document.getElementById('cont'));
+}
+
+function clTumunuSec(liste, sec) {
+  const l=CL_LISTELER[liste];
+  l.bolumler.forEach((b,bi)=>b.maddeler.forEach((_,mi)=>{
+    const k=clKey(liste,bi,mi);
+    if(S.cl.filtre==='yuksek'&&b.maddeler[mi].p!=='yuksek') return;
+    S.cl.kaydedilen[k]=sec;
+  }));
+  clSave();
   rChecklist(document.getElementById('cont'));
 }
 
 function rChecklist(el) {
-  // LocalStorage'dan yükle
-  try {
-    const saved = localStorage.getItem('dijitalmizan_cl');
-    if(saved) S.cl.kaydedilen = JSON.parse(saved);
-  } catch(e){}
+  clLoad();
+  if(!S.cl.filtre) S.cl.filtre='tumu';
+  const aktif=S.cl.aktifListe||'kurumlar';
+  S.cl.aktifListe=aktif;
+  const l=CL_LISTELER[aktif];
+  const s=clStats(aktif);
+  const pctRenk=s.pct===100?'var(--gn)':s.pct>=60?'var(--am)':'var(--ac)';
 
-  const aktif = S.cl.aktifListe;
-  const l = CL_LISTELER[aktif];
+  let h=`<style>
+  .cl-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--brd);margin-bottom:6px;cursor:pointer;transition:all .18s;background:var(--bgi)}
+  .cl-row:hover{border-color:var(--brd2);background:var(--bg2h)}
+  .cl-chk{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--brd);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .18s}
+  .cl-p-yuksek{font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(239,68,68,.1);color:var(--rd);font-weight:600;letter-spacing:.3px;flex-shrink:0}
+  .cl-bolum-h{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg0);border-radius:7px;margin-bottom:6px;cursor:pointer}
+  .cl-note{width:100%;background:transparent;border:none;outline:none;font-size:11px;color:var(--t2);font-family:'DM Sans',sans-serif;resize:none;margin-top:6px;padding:6px 8px;border-radius:5px;border:1px solid transparent;transition:border-color .2s}
+  .cl-note:focus{border-color:var(--brd);background:var(--bgi)}
+  .cl-note::placeholder{color:var(--t3)}
+  </style>`;
 
-  let h = '<div style="display:flex;flex-direction:column;gap:14px">';
-
-  // ── Liste seçici sekmeler ──
-  h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
-  Object.entries(CL_LISTELER).forEach(([key, lst]) => {
-    const d = clGetDurum(key);
-    const pct = d.toplam > 0 ? Math.round(d.tamamlanan/d.toplam*100) : 0;
-    const isAktif = key === aktif;
-    h += `<button onclick="S.cl.aktifListe='${key}';rChecklist(document.getElementById('cont'))"
-      style="padding:8px 16px;border-radius:8px;border:1px solid ${isAktif?lst.renk:'var(--brd)'};
-      background:${isAktif?lst.renk+'18':'transparent'};color:${isAktif?lst.renk:'var(--t2)'};
+  // ── Sekme listesi ──
+  h+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px">`;
+  Object.entries(CL_LISTELER).forEach(([key,lst])=>{
+    const st=clStats(key);
+    const isAktif=key===aktif;
+    h+=`<button onclick="S.cl.aktifListe='${key}';S.cl.filtre='tumu';rChecklist(document.getElementById('cont'))"
+      style="padding:7px 14px;border-radius:8px;border:1px solid ${isAktif?lst.renk:'var(--brd)'};
+      background:${isAktif?lst.renk+'1a':'transparent'};color:${isAktif?lst.renk:'var(--t2)'};
       font-size:12px;font-weight:${isAktif?'600':'400'};cursor:pointer;font-family:'DM Sans',sans-serif;
-      display:flex;align-items:center;gap:6px;transition:all .2s">
-      <span>${lst.emoji}</span>
-      <span>${lst.ad}</span>
-      <span style="font-size:10px;padding:2px 6px;border-radius:10px;
-        background:${pct===100?'rgba(34,197,94,.15)':'rgba(255,255,255,.06)'};
-        color:${pct===100?'var(--gn)':'var(--tm)'}">${pct}%</span>
+      display:inline-flex;align-items:center;gap:6px;transition:all .18s">
+      ${lst.ad}
+      <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.07);color:${isAktif?lst.renk:'var(--tm)'}" id="cl_tab_pct_${key}">${st.done}/${st.t}</span>
     </button>`;
   });
-  h += '</div>';
+  h+=`</div>`;
 
-  // ── Aktif liste başlığı + progress ──
-  const d = clGetDurum(aktif);
-  const pct = d.toplam > 0 ? Math.round(d.tamamlanan/d.toplam*100) : 0;
-  const pctRenk = pct===100?'var(--gn)':pct>=60?'var(--am)':'var(--ac)';
+  // ── İstatistik kartları ──
+  h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+    ${[
+      {lbl:'TOPLAM MADDE', val:s.t, id:'', renk:'var(--t1)', border:'var(--brd)'},
+      {lbl:'TAMAMLANAN',   val:s.done, id:'cl_stat_done_'+aktif, renk:'var(--gn)', border:'rgba(34,197,94,.3)'},
+      {lbl:'BEKLEYEN',     val:s.bekleyen, id:'cl_stat_bek_'+aktif, renk:'var(--am)', border:'rgba(245,158,11,.3)'},
+      {lbl:'İLERLEME',     val:s.pct+'%', id:'cl_stat_pct_'+aktif, renk:pctRenk, border:'rgba(59,130,246,.3)'},
+    ].map(c=>`<div style="border:1px solid ${c.border};border-radius:10px;padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${c.renk}" ${c.id?`id="${c.id}"`:''}>${c.val}</div>
+      <div style="font-size:9px;color:var(--tm);margin-top:4px;letter-spacing:1px;text-transform:uppercase">${c.lbl}</div>
+    </div>`).join('')}
+  </div>`;
 
-  h += `<div class="card"><div class="card-h">
-    <div class="card-t">${l.emoji} ${l.ad}</div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:11px;color:var(--tm)">${d.tamamlanan}/${d.toplam} madde</span>
-      <button class="btn" onclick="clSifirla('${aktif}')" style="font-size:10px;padding:4px 10px;color:var(--tm)">↺ Sıfırla</button>
+  // ── Progress bar ──
+  h+=`<div style="height:6px;background:var(--bgi);border-radius:3px;overflow:hidden">
+    <div id="cl_bar_${aktif}" style="height:100%;width:${s.pct}%;background:${pctRenk};border-radius:3px;transition:width .3s"></div>
+  </div>`;
+
+  // ── Filtre + aksiyon butonları ──
+  h+=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:6px">
+      ${['tumu','bekleyen','tamamlanan','yuksek'].map(f=>{
+        const lbls={tumu:'Tümü',bekleyen:'Bekleyen',tamamlanan:'Tamamlanan',yuksek:'Yüksek Öncelik'};
+        const isAkt=S.cl.filtre===f;
+        return `<button onclick="S.cl.filtre='${f}';rChecklist(document.getElementById('cont'))"
+          style="padding:6px 14px;border-radius:7px;border:1px solid ${isAkt?'var(--ac)':'var(--brd)'};
+          background:${isAkt?'var(--ac)':'transparent'};color:${isAkt?'#fff':'var(--t2)'};
+          font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s">${lbls[f]}</button>`;
+      }).join('')}
     </div>
-  </div><div class="card-b" style="padding:14px 16px">
-    <div style="font-size:11px;color:var(--tm);margin-bottom:10px">${l.aciklama} · Son tarih: <b style="color:var(--t2)">${l.son}</b></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-      <div style="flex:1;height:7px;background:var(--bgi);border-radius:4px;overflow:hidden">
-        <div id="cl_bar_${aktif}" style="height:100%;width:${pct}%;background:${pctRenk};border-radius:4px;transition:width .3s"></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="clTumunuSec('${aktif}',true)" style="background:none;border:none;color:var(--ac);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Seçileni Tamamla</button>
+      <span style="color:var(--brd)">|</span>
+      <button onclick="clSifirla('${aktif}')" style="background:none;border:none;color:var(--rd);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Seçileni Sıfırla</button>
+    </div>
+  </div>`;
+
+  // ── Maddeler ──
+  l.bolumler.forEach((bolum,bi)=>{
+    // Filtreye göre gösterilecek maddeler
+    const gorunenMaddeler=bolum.maddeler.map((m,mi)=>{
+      const k=clKey(aktif,bi,mi);
+      const done=!!S.cl.kaydedilen[k];
+      if(S.cl.filtre==='bekleyen'&&done) return null;
+      if(S.cl.filtre==='tamamlanan'&&!done) return null;
+      if(S.cl.filtre==='yuksek'&&m.p!=='yuksek') return null;
+      return {m,mi,k,done};
+    }).filter(Boolean);
+
+    if(!gorunenMaddeler.length) return;
+
+    const bolumDone=bolum.maddeler.filter((_,mi)=>S.cl.kaydedilen[clKey(aktif,bi,mi)]).length;
+    h+=`<div style="background:var(--bg2);border:1px solid var(--brd);border-radius:10px;overflow:hidden;margin-bottom:2px">
+      <div class="cl-bolum-h">
+        <span style="font-size:13px;font-weight:600;color:var(--t1)">${bolum.ad}</span>
+        <span style="font-size:11px;color:var(--tm);font-family:'JetBrains Mono',monospace">${bolumDone}/${bolum.maddeler.length}</span>
       </div>
-      <span id="cl_pct_${aktif}" style="font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${pctRenk};min-width:36px;text-align:right">${pct}%</span>
-    </div>
-    ${pct===100?`<div style="font-size:12px;color:var(--gn);margin-top:8px">🎉 Tüm kontroller tamamlandı!</div>`:''}
-  </div></div>`;
+      <div style="padding:8px 10px">`;
 
-  // ── Bölümler ve maddeler ──
-  l.bolumler.forEach((bolum, bi) => {
-    const bolumToplam = bolum.maddeler.length;
-    const bolumTamamlanan = bolum.maddeler.filter((_, mi) => S.cl.kaydedilen[clKey(aktif, bi, mi)]).length;
-    const bolumPct = Math.round(bolumTamamlanan/bolumToplam*100);
-
-    h += `<div class="card"><div class="card-h" style="cursor:pointer" onclick="
-      const b=document.getElementById('cl_body_${aktif}_${bi}');
-      b.style.display=b.style.display==='none'?'block':'none'">
-      <div class="card-t" style="font-size:12px">${bolum.ad}</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;color:var(--tm)">${bolumTamamlanan}/${bolumToplam}</span>
-        <div style="width:60px;height:4px;background:var(--bgi);border-radius:2px;overflow:hidden">
-          <div style="height:100%;width:${bolumPct}%;background:${bolumPct===100?'var(--gn)':'var(--ac)'};border-radius:2px"></div>
-        </div>
-        <span style="font-size:9px;color:var(--tm)">▼</span>
-      </div>
-    </div>
-    <div id="cl_body_${aktif}_${bi}" style="display:block">
-    <div class="card-b" style="padding:8px">`;
-
-    bolum.maddeler.forEach((madde, mi) => {
-      const key = clKey(aktif, bi, mi);
-      const tamamlandi = !!S.cl.kaydedilen[key];
-      h += `<div id="cl_row_${key}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;
-        border:1px solid var(--brd);margin-bottom:5px;cursor:pointer;
-        background:${tamamlandi?'rgba(16,185,129,.04)':'var(--bgi)'};
-        opacity:${tamamlandi?'0.55':'1'};transition:all .2s"
+    gorunenMaddeler.forEach(({m,mi,k,done})=>{
+      const note=S.cl.notlar?.[k]||'';
+      h+=`<div id="clr_${k}" class="cl-row"
+        style="background:${done?'rgba(16,185,129,.05)':'var(--bgi)'};border-color:${done?'rgba(16,185,129,.25)':'var(--brd)'}"
         onclick="clToggle('${aktif}',${bi},${mi})">
-        <div style="width:18px;height:18px;border-radius:5px;border:1.5px solid ${tamamlandi?'var(--gn)':'var(--brd)'};
-          background:${tamamlandi?'var(--gn)':'transparent'};display:flex;align-items:center;justify-content:center;
-          flex-shrink:0;transition:all .2s">
-          ${tamamlandi?'<span style="color:#fff;font-size:11px;font-weight:700">✓</span>':''}
+        <div id="clc_${k}" class="cl-chk"
+          style="background:${done?'var(--gn)':'transparent'};border-color:${done?'var(--gn)':'var(--brd)'}">
+          ${done?`<svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}
         </div>
-        <input type="checkbox" id="cl_cb_${key}" style="display:none" ${tamamlandi?'checked':''}>
-        <span style="font-size:12px;color:var(--t2);${tamamlandi?'text-decoration:line-through;':''}">${madde}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span id="clt_${k}" style="font-size:12px;color:${done?'var(--tm)':'var(--t2)'};text-decoration:${done?'line-through':'none'}">${m.m}</span>
+            ${m.p==='yuksek'?`<span class="cl-p-yuksek">YÜKSEK</span>`:''}
+          </div>
+          <textarea class="cl-note" rows="1" placeholder="Not ekle..."
+            onclick="event.stopPropagation()"
+            onchange="if(!S.cl.notlar)S.cl.notlar={};S.cl.notlar['${k}']=this.value;clSave()"
+          >${note}</textarea>
+        </div>
       </div>`;
     });
 
-    h += `</div></div></div>`;
+    h+=`</div></div>`;
   });
 
-  // ── Bilgi notu ──
-  h += `<div style="padding:10px 14px;background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.12);border-radius:8px;font-size:11px;color:var(--tm)">
-    💡 Checklist durumu tarayıcınızda saklanır. Aynı cihazda oturum açmadan da kullanabilirsiniz. 
-    İleride hesap bazlı ve müşteri bazlı kayıt özelliği eklenecektir.
+  // ── Bilgi ──
+  h+=`<div style="padding:9px 14px;background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.1);border-radius:8px;font-size:11px;color:var(--tm)">
+    💡 Checklist ve notlar tarayıcınızda saklanır. Hesap bazlı kayıt özelliği yakında eklenecek.
   </div>`;
 
-  h += '</div>';
-  el.innerHTML = h;
+  el.innerHTML=h;
 }
 </script>
 </body>
