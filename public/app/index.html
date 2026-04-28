@@ -2146,6 +2146,11 @@ function rDetay(el){
   const borçSenetleri321=bC('321');
   const supheli128=bD('128');
   const sayimFazlasi197=bD('197');
+  // Yeni risk kalemleri
+  const sipariAvans159=bD('159');       // Verilen sipariş avansları
+  const uzunVadeliAlacak232=bD('232')+bD('231'); // Uzun vadeli diğer alacaklar
+  const personelAvans196=bD('196');     // Personel avansları
+  const borcSenedi321=bC('321');        // Borç senetleri yoğunluğu
 
   let h=`<div style="display:flex;flex-direction:column;gap:14px">`;
 
@@ -2162,6 +2167,49 @@ function rDetay(el){
   if(supheli128>0){
     const oran=alacak120>0?(supheli128/alacak120*100):0;
     anomaliler.push({sev:'rd',kat:'alacak',msg:`Şüpheli Alacak (128): ${fC(supheli128)} — toplam alacağın %${oran.toFixed(1)}'i`,detay:'Bu tutar bankacılar tarafından aktiften düşülür. Net alacak değeri bu kadar azdır.'});
+  }
+
+  // 159 Verilen Sipariş Avansları — şişkinlik riski
+  if(sipariAvans159>0&&totalAktif>0){
+    const aktifOran=sipariAvans159/totalAktif*100;
+    const sev=aktifOran>8?'rd':aktifOran>3?'am':'bilgi';
+    anomaliler.push({sev,kat:'avans',msg:`Verilen Sipariş Avansları (159): ${fC(sipariAvans159)} — aktifin %${aktifOran.toFixed(1)}'i`,
+      detay:'Uzun süre kapanmayan avanslar analistler tarafından "para transferi" olarak yorumlanır ve aktiften düşülür. Stok devir hızını yanıltıcı biçimde yükseltebilir.'});
+  }
+
+  // 121 Alacak Senetleri — hatır senedi şüphesi
+  if(alacakSenetleri121>0&&totalSatis>0){
+    const satisPct=alacakSenetleri121/totalSatis*100;
+    if(satisPct>30){
+      anomaliler.push({sev:'am',kat:'alacak',msg:`Alacak Senetleri (121): ${fC(alacakSenetleri121)} — cironun %${satisPct.toFixed(1)}'i`,
+        detay:'Yüksek senetli alacak oranı hatır senedi şüphesi yaratır. Bankalar bu tutarı likidite analizine dahil etmez; nakit akışı kalitesini bozar, karşılıksız çıkma riski yüksek görülür.'});
+    }
+  }
+
+  // 232/231 Uzun Vadeli Diğer Alacaklar — atıl para riski
+  if(uzunVadeliAlacak232>0&&totalAktif>0){
+    const aktifOran=uzunVadeliAlacak232/totalAktif*100;
+    const sev=aktifOran>10?'rd':aktifOran>5?'am':'bilgi';
+    anomaliler.push({sev,kat:'alacak',msg:`Uzun Vadeli Diğer Alacaklar (231/232): ${fC(uzunVadeliAlacak232)} — aktifin %${aktifOran.toFixed(1)}'i`,
+      detay:'Ana faaliyet dışı uzun vadeli alacaklar şirketin parasını atıl bıraktığını veya ortakları/iştirakleri finanse ettiğini gösterir. Cari oranı doğrudan olumsuz etkiler.'});
+  }
+
+  // 196 Personel Avansları — kurumsallık eksikliği
+  if(personelAvans196>0&&totalAktif>0){
+    const aktifOran=personelAvans196/totalAktif*100;
+    if(aktifOran>1){
+      anomaliler.push({sev:'am',kat:'avans',msg:`Personel Avansları (196): ${fC(personelAvans196)} — aktifin %${aktifOran.toFixed(1)}'i`,
+        detay:'Kasa/banka hesaplarının personel/yönetici cüzdanı gibi kullanıldığını gösterir. Kurumsallıktan uzak yapı sinyali verir, operasyonel risk puanını artırır.'});
+    }
+  }
+
+  // 321 Borç Senetleri — finansal stres göstergesi
+  if(borcSenedi321>0&&borc320>0){
+    const senetOran=borcSenedi321/borc320*100;
+    if(senetOran>50){
+      anomaliler.push({sev:'am',kat:'borc',msg:`Borç Senetleri (321): Ticari borcun %${senetOran.toFixed(0)}'i senetli (${fC(borcSenedi321)})`,
+        detay:'Açık hesap yerine sürekli senetli borçlanma, tedarikçiler nezdinde kredibilitenin azaldığını ve sadece kıymetli evrakla mal alınabildiğini gösterir. Finansal stres göstergesidir.'});
+    }
   }
 
   // Sayım fazlası
@@ -2235,7 +2283,7 @@ function rDetay(el){
   }
 
   // Anomali kartı
-  const anomKatlar={muhasebe:'🔴 Muhasebe Hataları',alacak:'💳 Alacak & Tahsilat',ortak:'👤 Ortaklar Cari',kdv:'🧾 KDV',vergi:'🏛️ Vergi',stok:'📦 Stok',nakit:'💵 Nakit',senet:'📄 Senet'};
+  const anomKatlar={muhasebe:'🔴 Muhasebe Hataları',alacak:'💳 Alacak & Tahsilat',ortak:'👤 Ortaklar Cari',kdv:'🧾 KDV',vergi:'🏛️ Vergi',stok:'📦 Stok',nakit:'💵 Nakit',senet:'📄 Senet',avans:'⚠️ Avans & Şişkinlik Riski',borc:'📋 Borç Yapısı'};
   const katGruplari={};
   anomaliler.forEach(a=>{if(!katGruplari[a.kat])katGruplari[a.kat]=[];katGruplari[a.kat].push(a)});
   const rdSay=anomaliler.filter(a=>a.sev==='rd').length;
@@ -3098,22 +3146,20 @@ function raporOnizle(){
   if(incCompare&&S.periods.length>=2){
     const aR2=Object.values(RATIOS).flatMap(c=>c.items);
     const pCount=S.periods.length;
-    // Sütun genişlikleri: rasyo adı sabit, dönem sütunları eşit
-    const rasyoW=38; // %
-    const donemW=Math.floor((62)/pCount); // kalan % eşit paylaşım
+    const rasyoW=Math.max(28,48-pCount*3);
+    const donemW=Math.floor((100-rasyoW)/pCount);
     const colDefs=`<col style="width:${rasyoW}%">${S.periods.map(()=>`<col style="width:${donemW}%">`).join('')}`;
     body+=`<div class="page"><div class="ph"><div class="ph-title">Dönemsel Karşılaştırma</div><div class="ph-sub">${sirket}</div></div><div class="pb">`;
-    body+=`<table class="rt" style="table-layout:fixed;width:100%"><colgroup>${colDefs}</colgroup><thead><tr>
-      <th style="text-align:left">Rasyo</th>
-      ${S.periods.map(pp=>`<th style="text-align:right;white-space:nowrap">${pp.name||'Dönem'}</th>`).join('')}
-    </tr></thead><tbody>`;
+    body+=`<table style="table-layout:fixed;width:100%;border-collapse:collapse;font-size:9pt"><colgroup>${colDefs}</colgroup><thead><tr>\n      <th style="text-align:left;padding:8px 10px;background:#1e3a5f;color:#fff;font-weight:700">Rasyo</th>\n      ${S.periods.map(pp=>`<th style="text-align:center;padding:8px 6px;background:#1e3a5f;color:#fff;font-weight:700;white-space:nowrap">${pp.name||'Dönem'}</th>`).join('')}\n    </tr></thead><tbody>`;
     aR2.forEach(r=>{
       const vals=S.periods.map(pp=>r.calc(nd(pp)));
       if(vals.every(v=>v===null))return;
-      body+=`<tr><td class="rn" style="overflow:hidden;text-overflow:ellipsis">${r.name}</td>${vals.map((v,i)=>{
+      const rowBg=(aR2.indexOf(r)%2===0)?'#ffffff':'#f8fafc';
+      body+=`<tr style="background:${rowBg}"><td style="text-align:left;padding:7px 10px;font-weight:500;border-bottom:1px solid #e2e8f0;color:#1e293b">${r.name}</td>${vals.map((v,i)=>{
         const fmt=v===null?'—':r.pct?fP2(v):r.cur?fC2(v):fR2(v);
         const cls=v!==null?rCls(r.key,v):'neu';
-        return`<td class="rv ${cls}" style="text-align:right;white-space:nowrap">${fmt}</td>`;
+        const color={'good':'#16a34a','mid':'#d97706','bad':'#dc2626','neu':'#64748b'}[cls]||'#1e293b';
+        return`<td style="text-align:center;padding:7px 6px;font-weight:700;border-bottom:1px solid #e2e8f0;color:${color};white-space:nowrap">${fmt}</td>`;
       }).join('')}</tr>`;
     });
     body+=`</tbody></table></div></div>`;
