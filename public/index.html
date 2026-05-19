@@ -2072,100 +2072,32 @@ function rInp(el){const p=S.periods[S.ap];const logH=p.parseLog.length?`<div cla
 const hasData=p.fileName&&Object.values(p.data).some(v=>v);
 const guidance=hasData?`<div style="margin-top:10px;padding:10px 14px;background:var(--acd);border:1px solid rgba(var(--ac-rgb,59 130 246)/.2);border-radius:6px;font-size:11px;color:var(--ac)">💡 Farklı bir dönem analiz etmek için yukarıdaki <strong>"+ Dönem Ekle"</strong> butonunu kullanın. Dönem adını çift tıklayarak düzenleyebilirsiniz.</div>`:'';
 
-// ── ONBOARDING: ilk açılışta veri yoksa göster ──────────────
+// ── ONBOARDING: ilk açılışta direkt dosya yükleme alanını göster ──────────────
+// Eski onboarding (2 kart + karşılaştırma tablosu) kaldırıldı: kullanıcılar dosya yüklemek için
+// burada → manuel girişi ayrı bir link üzerinden açıyor.
 const isFirstVisit=!p.fileName&&!p.isMizan&&!Object.values(p.data).some(v=>v);
 if(isFirstVisit){
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px">
-
-  <!-- Hoş geldin başlığı -->
-  <div style="text-align:center;padding:28px 16px 8px">
-    <div style="font-size:28px;margin-bottom:8px">📊</div>
-    <div style="font-size:17px;font-weight:600;color:var(--t1);letter-spacing:-.3px;margin-bottom:6px">Ne yüklemek istersiniz?</div>
-    <div style="font-size:12px;color:var(--tm);max-width:480px;margin:0 auto;line-height:1.6">Her belge farklı bir analiz derinliği sunar. Tek belgeyle başlayabilir, sonradan diğerlerini ekleyebilirsiniz.</div>
-  </div>
-
-  <!-- 2 kart yan yana -->
-  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
-
-    <!-- Excel / PDF -->
-    <div class="onb-card" onclick="sTab('input');setTimeout(()=>document.getElementById('fInp')?.click(),80)" style="cursor:pointer">
-      <div class="onb-icon" style="background:rgba(79,142,247,.1)">📑</div>
-      <div class="onb-title">Excel Mizan veya PDF</div>
-      <div class="onb-desc">Detay mizan, bilanço veya gelir tablosunu yükleyin. Yapay zeka otomatik okur.</div>
-      <div class="onb-chips">
-        <span class="onb-chip">Rasyolar</span>
-        <span class="onb-chip">Sankey</span>
-        <span class="onb-chip">AI Yorum</span>
-        <span class="onb-chip">Kredi Skoru</span>
-        <span class="onb-chip">Detay Mizan</span>
+    <div class="card">
+      <div class="card-h">
+        <div class="card-t">📂 Dosya Yükleme${p.name?' — '+esc(p.name):''}</div>
       </div>
-      <div class="onb-formats">.xlsx · .xls · .csv · .pdf</div>
-    </div>
-
-    <!-- Manuel -->
-    <div class="onb-card" onclick="S.periods[S.ap].fileName='manual';render();setTimeout(()=>document.querySelector('.ig')?.scrollIntoView({behavior:'smooth'}),100)" style="cursor:pointer;opacity:.85">
-      <div class="onb-icon" style="background:rgba(123,92,240,.1)">✏️</div>
-      <div class="onb-title">Manuel Giriş</div>
-      <div class="onb-desc">Dosyanız yoksa finansal verileri kendiniz girin. Bilanço ve gelir tablosu kalemlerini doldurun.</div>
-      <div class="onb-chips">
-        <span class="onb-chip onb-chip-pr">Hızlı Analiz</span>
-        <span class="onb-chip onb-chip-pr">Senaryo Testi</span>
+      <div class="card-b">
+        <div class="uz" id="upZ" onclick="document.getElementById('fInp').click()">
+          <div class="uz-i">📂</div>
+          <div class="uz-t">Analiz edilecek dönem için dosya yükleyin</div>
+          <div class="uz-h">Excel (.xlsx .xls .csv) veya PDF — Sürükle & Bırak</div>
+          <div class="uz-h" style="margin-top:2px;color:var(--ac)">Detay Mizan · Bilanço · Gelir Tablosu · Beyanname</div>
+        </div>
+        <input type="file" id="fInp" accept=".xlsx,.xls,.csv,.pdf" style="display:none" onchange="hFile(this.files[0])">
+        <div class="kv-banner" style="margin-top:12px"><div class="kv-banner-icon">ℹ️</div><div class="kv-banner-body"><strong>PDF dosyaları</strong> yapay zeka okuma için <strong>Anthropic Inc. (ABD)</strong> sunucularına base64 olarak iletilir; Anthropic tarafında kalıcı olarak saklanmaz. <strong>Excel</strong> ve <strong>e-Defter (XML/ZIP)</strong> tarayıcınızda işlenir, hiçbir sunucuya gönderilmez. <a href="javascript:void(0)" onclick="openPrivacyPolicy()">Gizlilik Politikası →</a></div></div>
+        <div style="text-align:center;margin-top:14px">
+          <a href="#" onclick="S.periods[S.ap].fileName='manual';render();setTimeout(()=>document.querySelector('.ig')?.scrollIntoView({behavior:'smooth'}),100);return false;" style="font-size:11px;color:var(--t2);text-decoration:underline">veya finansal verileri manuel olarak girin</a>
+        </div>
       </div>
-      <div class="onb-formats">Dosya gerekmez</div>
     </div>
-
-  </div>
-
-  <!-- Ne alırsınız tablosu -->
-  <div class="card"><div class="card-h"><div class="card-t">📊 Hangi belge ne sunar?</div></div>
-  <div class="card-b" style="padding:0;overflow:auto">
-  <table class="ctb">
-    <thead><tr>
-      <th>Özellik</th>
-      <th style="text-align:center">Excel / PDF</th>
-      <th style="text-align:center">Manuel</th>
-    </tr></thead>
-    <tbody>
-      ${[
-        ['20+ Finansal Rasyo','✓','✓'],
-        ['Sankey Gelir Akışı','✓','✓'],
-        ['AI Uzman Yorumu','✓','✓'],
-        ['Sektör Benchmark','✓','✓'],
-        ['Kredi & BDDK Skoru','✓','✓'],
-        ['Detay Mizan Analizi','✓ (mizan yüklendiyse)','—'],
-        ['Müşteri / Tedarikçi Analizi','✓ (mizan yüklendiyse)','—'],
-        ['DSO / DPO Hesabı','✓ (mizan yüklendiyse)','—'],
-        ['Vergi Takvimi','✓','✓'],
-        ['PDF Rapor','✓','✓'],
-      ].map(([f,a,b])=>`<tr>
-        <td style="font-size:12px">${f}</td>
-        <td style="text-align:center;font-size:13px;color:${a.startsWith('✓')?'var(--gn)':'var(--t4)'}">${a}</td>
-        <td style="text-align:center;font-size:13px;color:${b.startsWith('✓')?'var(--gn)':'var(--t4)'}">${b}</td>
-      </tr>`).join('')}
-    </tbody>
-  </table>
-  </div></div>
-
   </div>`;
-
-  // Onboarding CSS — sadece bir kez inject et
-  if(!document.getElementById('onb-style')){
-    const st=document.createElement('style');
-    st.id='onb-style';
-    st.textContent=`
-      .onb-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r-3);padding:22px 20px;transition:border-color var(--dur-2) var(--ease),transform var(--dur-1) var(--ease),box-shadow var(--dur-2) var(--ease);display:flex;flex-direction:column;gap:12px;font-family:var(--font-sans);letter-spacing:var(--tracking-tight)}
-      .onb-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.10),0 0 0 1px var(--brd)}
-      .onb-icon{width:44px;height:44px;border-radius:var(--r-2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-      .onb-title{font-size:var(--fs-15);font-weight:600;color:var(--t1);letter-spacing:var(--tracking-tight)}
-      .onb-desc{font-size:var(--fs-12);color:var(--t2);line-height:1.7;font-weight:400}
-      .onb-chips{display:flex;flex-wrap:wrap;gap:6px}
-      .onb-chip{font-family:var(--font-sans);font-size:11px;font-weight:500;padding:3px 10px;border-radius:var(--r-pill);background:rgba(10,132,255,.14);color:var(--ac);border:1px solid var(--brd);letter-spacing:var(--tracking-tight)}
-      .onb-chip-gn{background:rgba(48,209,88,.14);color:var(--gn)}
-      .onb-chip-pr{background:rgba(191,90,242,.14);color:#bf5af2}
-      .onb-formats{font-family:var(--font-num);font-size:10px;color:var(--tm);margin-top:auto;letter-spacing:0;font-variant-numeric:tabular-nums}
-    `;
-    document.head.appendChild(st);
-  }
+  setTimeout(()=>{const z=document.getElementById('upZ');if(!z)return;z.ondragover=e=>{e.preventDefault();z.classList.add('dov')};z.ondragleave=()=>z.classList.remove('dov');z.ondrop=e=>{e.preventDefault();z.classList.remove('dov');if(e.dataTransfer.files[0])hFile(e.dataTransfer.files[0])}},50);
   return;
 }
 // ── Normal görünüm (veri yüklü) ───────────────────────────
@@ -2800,7 +2732,11 @@ async function hFile(file){
     return;
   }
   const p=S.periods[S.ap];
-  if(p.fileName){
+  // Üzerine yazma uyarısı sadece GERÇEKTEN veri varsa fire etsin — yeni boş dönemde fileName geçici olarak
+  // set olabilir (processFile başlangıcında) ama p.data henüz dolmamıştır. Aynı dosya tekrar yükleniyorsa da prompt gereksiz.
+  const hasMeaningfulData = !!(p.fileName && Object.values(p.data||{}).some(v=>v && v!=='0'));
+  const isSameFile = !!(p.fileName && p.fileName === file.name);
+  if(hasMeaningfulData && !isSameFile){
     if(!confirm('Bu dönemde zaten veri var. Üzerine yazmak istiyor musunuz?\n\nFarklı bir dönem için yukarıdaki "+ Dönem Ekle" butonunu kullanın.'))return;
   }
   if(!p.name){
@@ -5671,17 +5607,57 @@ function _buildMaliTablo(period){
       nonBilancoNet += (accts[code].d || 0) - (accts[code].c || 0);
     }
   }
-  // Sentetik öz kaynak katkısı = -nonBilancoNet
-  // (6xx gelir-yoğunsa Σ negatif olur → katkı pozitif → öz kaynağa kâr eklenir)
-  const cariDonemKar = -nonBilancoNet;
+  const cariFromGl = -nonBilancoNet; // 6xx net'inden hesaplanan beklenen dönem kârı
+
+  // Booked dönem kârı: 590 (alacak bakiyeli kâr) − 591 (borç bakiyeli zarar)
+  const _bal = (c) => ((accts[c]?.c||0) - (accts[c]?.d||0));
+  const booked590Net = _bal('590') - _bal('591'); // pozitifse kâr, negatifse zarar
+  const T590 = Math.abs(booked590Net);
+  const TGl  = Math.abs(cariFromGl);
+
+  // 4 farklı kapanış durumu → 4 farklı strateji:
+  //   (A) Klasik kapanış-öncesi: 590≈0, 6xx açık → sentetik = cariFromGl ✓
+  //   (B) Klasik kapanış-sonrası: 590 booked, 6xx ≈ 0 → sentetik gereksiz (590 zaten 5xx içinde) ✓
+  //   (C) Veri tutarsız: hem 590 booked hem 6xx açık → ÇİFT SAYIM riski. Bilanço'yu kalan farkla dengele,
+  //       kullanıcıya uyarı göster (PDF Beyanname + Excel mizan karışımı senaryosu)
+  //   (D) Boş: ikisi de ≈0 → sentetik yok
+  let cariDonemKar = 0;
+  let synthLabel   = 'Cari Dönem Net Kârı/Zararı (Hesaplanan)';
+  let synthTooltip = 'Gelir tablosundan hesaplandı — 6xx hesapları henüz kapatılmadığı için öz kaynaklara aktarılır';
+  let inconsistencyWarning = null;
+
+  if(T590 < 0.5 && TGl > 0.5){
+    // (A) Pre-close: trust 6xx
+    cariDonemKar = cariFromGl;
+  } else if(T590 > 0.5 && TGl < Math.max(T590 * 0.1, 1)){
+    // (B) Post-close: trust booked 590, no synthetic
+    cariDonemKar = 0;
+  } else if(T590 > 0.5 && TGl > 0.5){
+    // (C) Inconsistent — both populated. Use the remaining aktif-pasif gap to balance,
+    // since the 6xx-running may double-count what's already in 590.
+    const preDiff = aktif.total - pasif.total;
+    cariDonemKar = preDiff;
+    synthLabel   = 'Bilanço Dengeleme Düzeltmesi (Veri Tutarsız)';
+    synthTooltip = `Veri tutarsız: hem 590 (${fmtTL(booked590Net)}) hem de açık 6xx hesapları (${fmtTL(cariFromGl)}) bulunduğu için çift sayım önlenerek kalan farkla dengelendi.`;
+    inconsistencyWarning = {
+      bookedNet:  booked590Net,
+      runningNet: cariFromGl,
+      msg: '⚠ Mizan tutarsız: 590 (Dönem Net Kârı) booked olduğu halde 6xx (Gelir/Gider) hesapları henüz kapatılmamış. Bilanço otomatik olarak kalan farkla dengelendi — gerçek dönem kârı 590 satırında okunabilir.'
+    };
+  } else if(TGl > 0.5){
+    // Fallback: only 6xx data
+    cariDonemKar = cariFromGl;
+  }
+
   if(Math.abs(cariDonemKar) > 0.5){
     const ozKaynakBranch = pasif.branches.find(b => b.code === '5');
     if(ozKaynakBranch){
       ozKaynakBranch.groups.push({
         code: '—',
-        label: 'Cari Dönem Net Kârı/Zararı (Hesaplanan)',
+        label: synthLabel,
         total: cariDonemKar,
-        synthetic: true,  // renderer'a görsel ipucu için
+        synthetic: true,
+        tooltip: synthTooltip,
       });
       ozKaynakBranch.total += cariDonemKar;
       pasif.total += cariDonemKar;
@@ -5689,7 +5665,7 @@ function _buildMaliTablo(period){
   }
 
   const diff = aktif.total - pasif.total;
-  return { source, aktif, pasif, diff, gelirRows, periodName: period?.name || '', cariDonemKar };
+  return { source, aktif, pasif, diff, gelirRows, periodName: period?.name || '', cariDonemKar, inconsistencyWarning };
 }
 
 // ─── RENDERER ────────────────────────────────────────────────────────────
@@ -5728,7 +5704,7 @@ function rMaliTablolar(el){
         if(g.total === 0) continue; // boş alt grupları gizle
         // Sentetik satır (kapanış-öncesi 6xx → öz kaynak aktarımı) için görsel ipucu
         const isSyn = g.synthetic;
-        const codeCol = isSyn ? `<span title="Gelir tablosundan hesaplandı — 6xx hesapları henüz kapatılmadığı için öz kaynaklara aktarılır" style="color:var(--ac)">⚙</span>` : g.code;
+        const codeCol = isSyn ? `<span title="${esc(g.tooltip || 'Gelir tablosundan hesaplandı — 6xx hesapları henüz kapatılmadığı için öz kaynaklara aktarılır')}" style="color:var(--ac)">⚙</span>` : g.code;
         const labelCell = isSyn ? `<em style="color:var(--ac)">${g.label}</em>` : g.label;
         html += `<tr class="mt-row${isSyn?' mt-synrow':''}"><td style="width:38px;color:var(--tm);font-family:var(--font-num);font-size:11px;padding-left:18px">${codeCol}</td><td>${labelCell}</td><td class="r">${fmtCell(g.total)}</td></tr>`;
       }
@@ -5801,7 +5777,17 @@ function rMaliTablolar(el){
       </div>
     </div>`;
 
+  // Veri tutarsızlığı uyarı banner'ı (590 booked + 6xx açık birlikte bulunduğunda)
+  const warnHtml = mt.inconsistencyWarning
+    ? `<div style="background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.35);border-left:4px solid var(--am);border-radius:8px;padding:12px 14px;margin:0 0 14px;font-size:12px;color:var(--t2);line-height:1.6">
+        <div style="font-weight:600;color:var(--am);margin-bottom:6px">⚠ Veri Tutarsızlığı</div>
+        <div>${mt.inconsistencyWarning.msg}</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--tm);font-family:var(--font-num)">Booked 590/591 net: <strong style="color:var(--t1)">${fmtTL(mt.inconsistencyWarning.bookedNet)}</strong> · 6xx running net: <strong style="color:var(--t1)">${fmtTL(mt.inconsistencyWarning.runningNet)}</strong></div>
+        <div style="margin-top:6px;font-size:11px;color:var(--tm)">💡 Bu senaryo genellikle aynı döneme hem mizan hem beyanname (PDF) yüklendiğinde oluşur. Doğru sonuç için tek kaynak (mizan VEYA beyanname) yükleyin.</div>
+      </div>`
+    : '';
   el.innerHTML = `<div style="padding:16px 18px;max-width:1200px;margin:0 auto">
+    ${warnHtml}
     ${bilancoHtml}
     ${gelirHtml}
   </div>`;
